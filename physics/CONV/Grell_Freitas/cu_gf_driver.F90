@@ -9,7 +9,7 @@ module cu_gf_driver
    use machine   , only: kind_phys
    use cu_gf_deep, only: cu_gf_deep_run,neg_check,fct1d3
    use cu_gf_sh  , only: cu_gf_sh_run
-   use cu_gf_io  , only: cu_gf_io_write_state
+   use cu_gf_io  , only: cu_gf_io_write_state, cu_gf_io_read_state
 
    implicit none
 
@@ -349,6 +349,85 @@ contains
   !else
   !  print *, "INFO: Not writing state"
   !end if
+
+  !--- Read state
+  call cu_gf_io_read_state(trim(state_file),        &
+      ! ntracer,                 &
+      garea,                   &
+      ! dt,                      &
+      ! flag_init,               &
+      ! flag_restart,            &
+      cactiv,                  &
+      cactiv_m,                &
+      ! g,                       &
+      ! cp,                      &
+      ! xlv,                     &
+      ! r_v,                     &
+      forcet,                  &
+      forceqv_spechum,         &
+      phil,                    &
+      raincv,                  &
+      qv_spechum,              &
+      t,                       &
+      cld1d,                   &
+      us,                      &
+      vs,                      &
+      t2di,                    &
+      w,                       &
+      qv2di_spechum,           &
+      p2di,                    &
+      psuri,                   &
+      hbot,                    &
+      htop,                    &
+      kcnv,                    &
+      xland,                   &
+      hfx2,                    &
+      qfx2,                    &
+      aod_gf,                  &
+      cliw,                    &
+      clcw,                    &
+      pbl,                     &
+      ud_mf,                   &
+      dd_mf,                   &
+      dt_mf,                   &
+      cnvw_moist,              &
+      cnvc,                    &
+      ! imfshalcnv,              &
+      ! flag_for_scnv_generic_tend, &
+      ! flag_for_dcnv_generic_tend, &
+      dtend,                   &
+      dtidx,                   &
+      ! ntqv,                    &
+      ! ntiw,                    &
+      ! ntcw,                    &
+      ! index_of_temperature,    &
+      ! index_of_x_wind,         &
+      ! index_of_y_wind,         &
+      ! index_of_process_scnv,   &
+      ! index_of_process_dcnv,   &
+      ! fhour,                   &
+      fh_dfi_radar,            &
+      ix_dfi_radar,            &
+      cap_suppress,            &
+      ! dfi_radar_max_intervals, &
+      ! ldiag3d,                 &
+      qci_conv                 &
+      ! do_cap_suppress,         &
+      ! maxupmf,                 &
+      ! maxMF,                   &
+      ! do_mynnedmf,             &
+      ! ichoice_in,              &
+      ! ichoicem_in,             &
+      ! ichoice_s_in,            &
+      ! spp_cu_deep,             &
+      ! spp_wts_cu_deep,         &
+      ! nchem,                   &
+      ! chem3d,                  &
+      ! fscav,                   &
+      ! wetdpc_deep,             &
+      ! do_smoke_transport,      &
+      ! kdt                      &
+      )
 
 
   ! initialize ccpp error handling variables
