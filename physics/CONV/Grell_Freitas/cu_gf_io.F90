@@ -9,6 +9,253 @@ module cu_gf_io
 
    public :: cu_gf_io_write_state, cu_gf_io_read_state
 
+   integer, parameter :: nargs = 78
+   character(len=26), dimension(nargs) :: variables = &
+        (/                            &
+        'ntracer                   ', &
+        'garea                     ', &
+        'im                        ', &
+        'km                        ', &
+        'dt                        ', &
+        'flag_init                 ', &
+        'flag_restart              ', &
+        'cactiv                    ', &
+        'cactiv_m                  ', &
+        'g                         ', &
+        'cp                        ', &
+        'xlv                       ', &
+        'r_v                       ', &
+        'forcet                    ', &
+        'forceqv_spechum           ', &
+        'phil                      ', &
+        'raincv                    ', &
+        'qv_spechum                ', &
+        't                         ', &
+        'cld1d                     ', &
+        'us                        ', &
+        'vs                        ', &
+        't2di                      ', &
+        'w                         ', &
+        'qv2di_spechum             ', &
+        'p2di                      ', &
+        'psuri                     ', &
+        'hbot                      ', &
+        'htop                      ', &
+        'kcnv                      ', &
+        'xland                     ', &
+        'hfx2                      ', &
+        'qfx2                      ', &
+        'aod_gf                    ', &
+        'cliw                      ', &
+        'clcw                      ', &
+        'pbl                       ', &
+        'ud_mf                     ', &
+        'dd_mf                     ', &
+        'dt_mf                     ', &
+        'cnvw_moist                ', &
+        'cnvc                      ', &
+        'imfshalcnv                ', &
+        'flag_for_scnv_generic_tend', &
+        'flag_for_dcnv_generic_tend', &
+        'dtend                     ', &
+        'dtidx                     ', &
+        'ntqv                      ', &
+        'ntcw                      ', &
+        'ntiw                      ', &
+        'index_of_temperature      ', &
+        'index_of_x_wind           ', &
+        'index_of_y_wind           ', &
+        'index_of_process_scnv     ', &
+        'index_of_process_dcnv     ', &
+        'dfi_radar_max_intervals   ', &
+        'ldiag3d                   ', &
+        'qci_conv                  ', &
+        'fhour                     ', &
+        'do_cap_suppress           ', &
+        'fh_dfi_radar              ', &
+        'ix_dfi_radar              ', &
+        'num_dfi_radar             ', &
+        'cap_suppress              ', &
+        'maxupmf                   ', &
+        'maxMF                     ', &
+        'do_mynnedmf               ', &
+        'ichoice_in                ', &
+        'ichoicem_in               ', &
+        'ichoice_s_in              ', &
+        'spp_wts_cu_deep           ', &
+        'spp_cu_deep               ', &
+        'nchem                     ', &
+        'chem3d                    ', &
+        'fscav                     ', &
+        'do_smoke_transport        ', &
+        'wetdpc_deep               ', &
+        'kdt                       '  &
+        /)
+
+   character(len=132), dimension(nargs) :: long_names = &
+        (/                                                                                                                                      &
+        'number of tracers                                                                                                                   ', &
+        'grid cell area                                                                                                                      ', &
+        'horizontal loop extent                                                                                                              ', &
+        'vertical layer dimension                                                                                                            ', &
+        'physics time step                                                                                                                   ', &
+        'flag signaling first time step for time integration loop                                                                            ', &
+        'flag for restart (warmstart) or coldstart                                                                                           ', &
+        'convective activity memory                                                                                                          ', &
+        'mid-level cloud convective activity memory                                                                                          ', &
+        'gravitational acceleration                                                                                                          ', &
+        'specific heat !of dry air at constant pressure                                                                                      ', &
+        'latent heat of evaporation/sublimation                                                                                              ', &
+        'ideal gas constant for water vapor                                                                                                  ', &
+        'temperature tendency due to dynamics only                                                                                           ', &
+        'moisture tendency due to dynamics only                                                                                              ', &
+        'layer geopotential                                                                                                                  ', &
+        'deep convective rainfall amount on physics timestep                                                                                 ', &
+        'water vapor specific humidity updated by physics                                                                                    ', &
+        'updated temperature                                                                                                                 ', &
+        'cloud work function                                                                                                                 ', &
+        'updated x-direction wind                                                                                                            ', &
+        'updated y-direction wind                                                                                                            ', &
+        'mid-layer temperature                                                                                                               ', &
+        'layer mean vertical velocity                                                                                                        ', &
+        'water vapor specific humidity                                                                                                       ', &
+        'mean layer pressure                                                                                                                 ', &
+        'surface pressure                                                                                                                    ', &
+        'index for cloud base                                                                                                                ', &
+        'index for cloud top                                                                                                                 ', &
+        'deep convection: 0=no, 1=yes                                                                                                        ', &
+        'landmask: sea/land/ice=0/1/2                                                                                                        ', &
+        'kinematic surface upward sensible heat flux reduced by surface roughness and vegetation                                             ', &
+        'kinematic surface upward latent heat flux                                                                                           ', &
+        'aerosol optical depth used in Grell-Freitas Convective Parameterization                                                             ', &
+        'ratio of mass of ice water to mass of dry air plus vapor (without condensates) in the convectively transported tracer array         ', &
+        'ratio of mass of cloud water to mass of dry air plus vapor (without condensates) in the convectively transported tracer array       ', &
+        'PBL thickness                                                                                                                       ', &
+        '(updraft mass flux) * delt                                                                                                          ', &
+        '(downdraft mass flux) * delt                                                                                                        ', &
+        '(detrainment mass flux) * delt                                                                                                      ', &
+        'moist convective cloud water mixing ratio                                                                                           ', &
+        'convective cloud cover                                                                                                              ', &
+        'flag for mass-flux shallow convection scheme                                                                                        ', &
+        'true if GFS_SCNV_generic should calculate tendencies                                                                                ', &
+        'true if GFS_DCNV_generic should calculate tendencies                                                                                ', &
+        'diagnostic tendencies for state variables                                                                                           ', &
+        'index of state-variable and process in last dimension of diagnostic tendencies array AKA cumulative_change_index                    ', &
+        'tracer index for water vapor (specific humidity)                                                                                    ', &
+        'tracer index for cloud condensate (or liquid water)                                                                                 ', &
+        'tracer index for  ice water                                                                                                         ', &
+        'index of temperature in first dimension of array cumulative change index                                                            ', &
+        'index of x-wind in first dimension of array cumulative change index                                                                 ', &
+        'index of x-wind in first dimension of array cumulative change index                                                                 ', &
+        'index of shallow convection process in second dimension of array cumulative change index                                            ', &
+        'index of deep convection process in second dimension of array cumulative change index                                               ', &
+        'maximum allowed number of time ranges with radar-derived microphysics temperature tendencies or radar-derived convection suppression', &
+        'flag for 3d diagnostic fields                                                                                                       ', &
+        'convective cloud condesate after rainout                                                                                            ', &
+        'current forecast time                                                                                                               ', &
+        'flag for radar-derived convection suppression                                                                                       ', &
+        'forecast lead times bounding radar derived temperature or convection suppression intervals                                          ', &
+        'indices with radar derived temperature or convection suppression data                                                               ', &
+        'number of time ranges with radar-derived microphysics temperature tendencies or radar-derived convection suppression                ', &
+        'radar-derived convection suppression                                                                                                ', &
+        'maximum convective updraft mass flux within a column                                                                                ', &
+        'maximum mass flux within a column                                                                                                   ', &
+        'flag to activate MYNN-EDMF                                                                                                          ', &
+        'flag for C3 or GF deep convection closure                                                                                           ', &
+        'flag for C3 or GF mid convection closure                                                                                            ', &
+        'flag for C3 or GF shallow convection closure                                                                                        ', &
+        'spp weights for cu deep scheme                                                                                                      ', &
+        'control for deep convection spp perturbations                                                                                       ', &
+        'number of chemical species vertically mixed                                                                                         ', &
+        'mynn pbl transport of smoke and dust                                                                                                ', &
+        'smoke dust convetive wet scavanging coefficents                                                                                     ', &
+        'flag for rrfs smoke convective transport                                                                                            ', &
+        'convective wet removal of smoke and dust                                                                                            ', &
+        'current forecast iteration                                                                                                           ' &
+        /)
+
+   character(len=13), dimension(nargs) :: units = &
+        (/                            &
+        'count        ', &
+        'm2           ', &
+        'count        ', &
+        'count        ', &
+        's            ', &
+        'flag         ', &
+        'flag         ', &
+        'none         ', &
+        'none         ', &
+        'm s-2        ', &
+        'J kg-1 K-1   ', &
+        'J kg-1       ', &
+        'J kg-1 K-1   ', &
+        'K s-1        ', &
+        'kg kg-1 s-1  ', &
+        'm2 s-2       ', &
+        'm            ', &
+        'kg kg-1      ', &
+        'K            ', &
+        'm2 s-2       ', &
+        'm s-1        ', &
+        'm s-1        ', &
+        'K            ', &
+        'Pa s-1       ', &
+        'kg kg-1      ', &
+        'Pa           ', &
+        'Pa           ', &
+        'index        ', &
+        'index        ', &
+        'flag         ', &
+        'flag         ', &
+        'K m s-1      ', &
+        'kg kg-1 m s-1', &
+        'none         ', &
+        'kg kg-1      ', &
+        'kg kg-1      ', &
+        'm            ', &
+        'kg m-2       ', &
+        'kg m-2       ', &
+        'kg m-2       ', &
+        'kg kg-1      ', &
+        'frac         ', &
+        'flag         ', &
+        'flag         ', &
+        'flag         ', &
+        'mixed        ', &
+        'index        ', &
+        'index        ', &
+        'index        ', &
+        'index        ', &
+        'index        ', &
+        'index        ', &
+        'index        ', &
+        'index        ', &
+        'index        ', &
+        'count        ', &
+        'flag         ', &
+        'kg kg-1      ', &
+        'h            ', &
+        'flag         ', &
+        'h            ', &
+        'index        ', &
+        'count        ', &
+        'unitless     ', &
+        'm s-1        ', &
+        'm s-1        ', &
+        'flag         ', &
+        'flag         ', &
+        'flag         ', &
+        'flag         ', &
+        '1            ', &
+        'count        ', &
+        'count        ', &
+        'various      ', &
+        'none         ', &
+        'flag         ', &
+        'kg kg-1      ', &
+        'index         ' &
+        /)
+
 contains
 
    !------------------------------------------------------------------
@@ -17,732 +264,960 @@ contains
    ! writes the state variables to NetCDF
    !------------------------------------------------------------------
    subroutine cu_gf_io_write_state(filename,   &
-      ntracer,                 &
-      garea,                   &
-      dt,                      &
-      flag_init,               &
-      flag_restart,            &
-      cactiv,                  &
-      cactiv_m,                &
-      g,                       &
-      cp,                      &
-      xlv,                     &
-      r_v,                     &
-      forcet,                  &
-      forceqv_spechum,         &
-      phil,                    &
-      raincv,                  &
-      qv_spechum,              &
-      t,                       &
-      cld1d,                   &
-      us,                      &
-      vs,                      &
-      t2di,                    &
-      w,                       &
-      qv2di_spechum,           &
-      p2di,                    &
-      psuri,                   &
-      hbot,                    &
-      htop,                    &
-      kcnv,                    &
-      xland,                   &
-      hfx2,                    &
-      qfx2,                    &
-      aod_gf,                  &
-      cliw,                    &
-      clcw,                    &
-      pbl,                     &
-      ud_mf,                   &
-      dd_mf,                   &
-      dt_mf,                   &
-      cnvw_moist,              &
-      cnvc,                    &
-      imfshalcnv,              &
+      ntracer,                    &
+      garea,                      &
+      im,                         &
+      km,                         &
+      dt,                         &
+      flag_init,                  &
+      flag_restart,               &
+      cactiv,                     &
+      cactiv_m,                   &
+      g,                          &
+      cp,                         &
+      xlv,                        &
+      r_v,                        &
+      forcet,                     &
+      forceqv_spechum,            &
+      phil,                       &
+      raincv,                     &
+      qv_spechum,                 &
+      t,                          &
+      cld1d,                      &
+      us,                         &
+      vs,                         &
+      t2di,                       &
+      w,                          &
+      qv2di_spechum,              &
+      p2di,                       &
+      psuri,                      &
+      hbot,                       &
+      htop,                       &
+      kcnv,                       &
+      xland,                      &
+      hfx2,                       &
+      qfx2,                       &
+      aod_gf,                     &
+      cliw,                       &
+      clcw,                       &
+      pbl,                        &
+      ud_mf,                      &
+      dd_mf,                      &
+      dt_mf,                      &
+      cnvw_moist,                 &
+      cnvc,                       &
+      imfshalcnv,                 &
       flag_for_scnv_generic_tend, &
       flag_for_dcnv_generic_tend, &
-      dtend,                   &
-      dtidx,                   &
-      ntqv,                    &
-      ntiw,                    &
-      ntcw,                    &
-      index_of_temperature,    &
-      index_of_x_wind,         &
-      index_of_y_wind,         &
-      index_of_process_scnv,   &
-      index_of_process_dcnv,   &
-      fhour,                   &
-      fh_dfi_radar,            &
-      ix_dfi_radar,            &
-      cap_suppress,            &
-      dfi_radar_max_intervals, &
-      ldiag3d,                 &
-      qci_conv,                &
-      do_cap_suppress,         &
-      maxupmf,                 &
-      maxMF,                   &
-      do_mynnedmf,             &
-      ichoice_in,              &
-      ichoicem_in,             &
-      ichoice_s_in,            &
-      spp_cu_deep,             &
-      spp_wts_cu_deep,         &
-      nchem,                   &
-      chem3d,                  &
-      fscav,                   &
-      wetdpc_deep,             &
-      do_smoke_transport,      &
-      kdt                      &
+      dtend,                      &
+      dtidx,                      &
+      ntqv,                       &
+      ntiw,                       &
+      ntcw,                       &
+      index_of_temperature,       &
+      index_of_x_wind,            &
+      index_of_y_wind,            &
+      index_of_process_scnv,      &
+      index_of_process_dcnv,      &
+      fhour,                      &
+      fh_dfi_radar,               &
+      ix_dfi_radar,               &
+      num_dfi_radar,              &
+      cap_suppress,               &
+      dfi_radar_max_intervals,    &
+      ldiag3d,                    &
+      qci_conv,                   &
+      do_cap_suppress,            &
+      maxupmf,                    &
+      maxMF,                      &
+      do_mynnedmf,                &
+      ichoice_in,                 &
+      ichoicem_in,                &
+      ichoice_s_in,               &
+      spp_cu_deep,                &
+      spp_wts_cu_deep,            &
+      nchem,                      &
+      chem3d,                     &
+      fscav,                      &
+      wetdpc_deep,                &
+      do_smoke_transport,         &
+      kdt                         &
       )
  
      character(len=*), intent(in) :: filename
 
-     integer, intent(IN) :: ntracer
-     real(kind_phys), intent(IN) :: garea(:)
+     integer, intent(in) :: ntracer
+     real(kind_phys), intent(in) :: garea(:)
+     integer, intent(in) :: im, km
      real(kind=kind_phys) :: dt
      logical :: flag_init, flag_restart
-     integer, intent(IN) :: cactiv(:), cactiv_m(:)
-     real (kind=kind_phys), intent(IN) :: g,cp,xlv,r_v
-     real(kind_phys), intent(IN) :: forcet(:, :)
-     real(kind_phys), intent(IN) :: forceqv_spechum(:, :)
-     real(kind_phys), intent(IN) :: phil(:, :)
-     real(kind_phys), intent(IN) :: raincv(:)
-     real(kind_phys), intent(IN) :: qv_spechum(:, :)
-     real(kind_phys), intent(IN) :: t(:, :)
-     real(kind_phys), intent(IN) :: cld1d(:)
-     real(kind_phys), intent(IN) :: us(:, :)
-     real(kind_phys), intent(IN) :: vs(:, :)
-     real(kind_phys), intent(IN) :: t2di(:, :)
-     real(kind_phys), intent(IN) :: w(:, :)
-     real(kind_phys), intent(IN) :: qv2di_spechum(:, :)
-     real(kind_phys), intent(IN) :: p2di(:, :)
-     real(kind_phys), intent(IN) :: psuri(:)
-     integer, intent(IN) :: hbot(:)
-     integer, intent(IN) :: htop(:)
-     integer, intent(IN) :: kcnv(:)
-     integer, intent(IN) :: xland(:)
-     real(kind_phys), intent(IN) :: hfx2(:)
-     real(kind_phys), intent(IN) :: qfx2(:)
-     real(kind_phys), intent(IN) :: aod_gf(:)
-     real(kind_phys), intent(IN) :: cliw(:, :)
-     real(kind_phys), intent(IN) :: clcw(:, :)
-     real(kind_phys), intent(IN) :: pbl(:)
-     real(kind_phys), intent(IN) :: ud_mf(:, :)
-     real(kind_phys), intent(IN) :: dd_mf(:, :)
-     real(kind_phys), intent(IN) :: dt_mf(:, :)
-     real(kind_phys), intent(IN) :: cnvw_moist(:, :)
-     real(kind_phys), intent(IN) :: cnvc(:, :)
-     integer, intent(IN) :: imfshalcnv
-     logical, intent(IN) :: flag_for_scnv_generic_tend, flag_for_dcnv_generic_tend   
-     real(kind_phys), intent(IN) :: dtend(:, :, :)
-     integer, intent(IN) :: dtidx(:, :)
-     integer, intent(IN) :: ntqv, ntiw, ntcw
-     integer, intent(IN) :: index_of_temperature, index_of_x_wind, index_of_y_wind
-     integer, intent(IN) :: index_of_process_scnv, index_of_process_dcnv
-     real(kind=kind_phys), intent(IN) :: fhour
-     real(kind_phys), intent(IN) :: fh_dfi_radar(:)
-     integer, intent(IN) :: ix_dfi_radar(:)
-     real(kind_phys), intent(IN), optional :: cap_suppress(:, :)
-     integer, intent(IN) :: dfi_radar_max_intervals
+     integer, intent(in), optional :: cactiv(:), cactiv_m(:)
+     real (kind=kind_phys), intent(in) :: g, cp, xlv, r_v
+     real(kind_phys), intent(in), optional :: forcet(:, :)
+     real(kind_phys), intent(in), optional :: forceqv_spechum(:, :)
+     real(kind_phys), intent(in) :: phil(:, :)
+     real(kind_phys), intent(in) :: raincv(:)
+     real(kind_phys), intent(in) :: qv_spechum(:, :)
+     real(kind_phys), intent(in) :: t(:, :)
+     real(kind_phys), intent(in) :: cld1d(:)
+     real(kind_phys), intent(in) :: us(:, :)
+     real(kind_phys), intent(in) :: vs(:, :)
+     real(kind_phys), intent(in) :: t2di(:, :)
+     real(kind_phys), intent(in) :: w(:, :)
+     real(kind_phys), intent(in) :: qv2di_spechum(:, :)
+     real(kind_phys), intent(in) :: p2di(:, :)
+     real(kind_phys), intent(in) :: psuri(:)
+     integer, intent(in) :: hbot(:)
+     integer, intent(in) :: htop(:)
+     integer, intent(in) :: kcnv(:)
+     integer, intent(in) :: xland(:)
+     real(kind_phys), intent(in) :: hfx2(:)
+     real(kind_phys), intent(in) :: qfx2(:)
+     real(kind_phys), intent(in), optional :: aod_gf(:)
+     real(kind_phys), intent(in) :: cliw(:, :)
+     real(kind_phys), intent(in) :: clcw(:, :)
+     real(kind_phys), intent(in) :: pbl(:)
+     real(kind_phys), intent(in), optional :: ud_mf(:, :)
+     real(kind_phys), intent(in) :: dd_mf(:, :)
+     real(kind_phys), intent(in) :: dt_mf(:, :)
+     real(kind_phys), intent(in) :: cnvw_moist(:, :)
+     real(kind_phys), intent(in) :: cnvc(:, :)
+     integer, intent(in) :: imfshalcnv
+     logical, intent(in) :: flag_for_scnv_generic_tend, flag_for_dcnv_generic_tend
+     real(kind_phys), intent(in), optional :: dtend(:, :, :)
+     integer, intent(in) :: dtidx(:, :)
+     integer, intent(in) :: ntqv, ntiw, ntcw
+     integer, intent(in) :: index_of_temperature, index_of_x_wind, index_of_y_wind
+     integer, intent(in) :: index_of_process_scnv, index_of_process_dcnv
+     real(kind=kind_phys), intent(in) :: fhour
+     real(kind_phys), intent(in) :: fh_dfi_radar(:)
+     integer, intent(in) :: ix_dfi_radar(:)
+     integer, intent(in) :: num_dfi_radar
+     real(kind_phys), intent(in), optional :: cap_suppress(:, :)
+     integer, intent(in) :: dfi_radar_max_intervals
      logical, intent(in   ) :: ldiag3d
-     real(kind_phys), intent(IN) :: qci_conv(:, :)
-     logical, intent(IN) :: do_cap_suppress
-     real(kind=kind_phys), intent(IN) :: maxupmf(:)
-     real(kind=kind_phys), intent(IN) :: maxMF(:)
-     logical, intent(IN) :: do_mynnedmf
-     integer, intent(IN) :: ichoice_in, ichoicem_in, ichoice_s_in
-     integer, intent(IN) :: spp_cu_deep
-     real(kind_phys), intent(IN), optional :: spp_wts_cu_deep(:, :)
-     integer, intent(IN) :: nchem
-     real(kind_phys), intent(IN), optional :: chem3d(:,:,:)
-     real(kind_phys), intent(IN) :: fscav(:)
-     real(kind_phys), intent(IN), optional :: wetdpc_deep(:,:)
-     logical, intent(IN) :: do_smoke_transport
-     integer, intent(IN) :: kdt
+     real(kind_phys), intent(in), optional :: qci_conv(:, :)
+     logical, intent(in) :: do_cap_suppress
+     real(kind=kind_phys), intent(in), optional :: maxupmf(:)
+     real(kind=kind_phys), intent(in), optional :: maxMF(:)
+     logical, intent(in) :: do_mynnedmf
+     integer, intent(in) :: ichoice_in, ichoicem_in, ichoice_s_in
+     integer, intent(in) :: spp_cu_deep
+     real(kind_phys), intent(in), optional :: spp_wts_cu_deep(:, :)
+     integer, intent(in) :: nchem
+     real(kind_phys), intent(in), optional :: chem3d(:,:,:)
+     real(kind_phys), intent(in) :: fscav(:)
+     real(kind_phys), intent(in), optional :: wetdpc_deep(:,:)
+     logical, intent(in) :: do_smoke_transport
+     integer, intent(in) :: kdt
 
      ! General netCDF variables
      integer :: ncFileID
      integer :: nDimensions, nVariables, nAttributes, unlimitedDimID
-     integer :: ixDimID, kmDimID, imDimID
-     integer :: dtend_dimDimID
+     integer :: imDimID, kmDimID
+     integer :: dtend_dim3DimID
+     integer :: ntracers_p100DimID, dtidx_dim2DimID
      integer :: num_dfi_radarDimID, num_dfi_radar_p1DimID
-     integer :: dtidx_dim1DimID, dtidx_dim2DimID
      integer :: nchemDimID
-     integer :: km_m1DimID
-     integer :: gareaVarID, cactivVarID, cactiv_mVarID
+     integer :: fscavDimID
+
+     integer :: ntracerVarID, gareaVarID, dtVarID
+     integer :: flag_initVarID, flag_restartVarID
+     integer :: cactivVarID, cactiv_mVarID, gVarID
+     integer :: cpVarID, xlvVarID, r_vVarID
      integer :: forcetVarID, forceqv_spechumVarID, philVarID
      integer :: raincvVarID, qv_spechumVarID, tVarID, cld1dVarID
      integer :: usVarID, vsVarID, t2diVarID, wVarID, qv2di_spechumVarID
      integer :: p2diVarID, psuriVarID, hbotVarID, htopVarID, kcnvVarID
      integer :: xlandVarID, hfx2VarID, qfx2VarID, aod_gfVarID, cliwVarID
      integer :: clcwVarID, pblVarID, ud_mfVarID, dd_mfVarID, dt_mfVarID
-     integer :: cnvw_moistVarID, cnvcVarID, dtendVarID, dtidxVarID
-     integer :: qci_convVarID, ix_dfi_radarVarID, fh_dfi_radarVarID
+     integer :: cnvw_moistVarID, cnvcVarID, imfshalcnvVarID
+     integer :: flag_for_scnv_generic_tendVarID, flag_for_dcnv_generic_tendVarID
+     integer :: dtendVarID, dtidxVarID, ntqvVarID, ntcwVarID, ntiwVarID
+     integer :: index_of_temperatureVarID
+     integer :: index_of_x_windVarID, index_of_y_windVarID
+     integer :: index_of_process_scnvVarID, index_of_process_dcnvVarID
+     integer :: dfi_radar_max_intervalsVarID, ldiag3dVarID
+     integer :: qci_convVarID, fhourVarID, do_cap_suppressVarID
+     integer :: ix_dfi_radarVarID, fh_dfi_radarVarID, num_dfi_radarVarID
      integer :: cap_suppressVarID
      integer :: maxupmfVarID, maxMFVarID
-     integer :: spp_wts_cu_deepVarID
-     integer :: chem3dVarID
-     integer :: fscavVarID
-     integer :: wetdpc_deepVarID
-     
+     integer :: do_mynnedmfVarID
+     integer :: ichoice_inVarID, ichoicem_inVarID, ichoice_s_inVarID
+     integer :: spp_wts_cu_deepVarID, spp_cu_deepVarID, chem3dVarID
+     integer :: fscavVarID, do_smoke_transportVarID, wetdpc_deepVarID
+     integer :: kdtVarID
+
      ! Local variables
-     integer :: ix, im, km, km_m1
-     integer :: dtend_dim
-     integer :: num_dfi_radar, num_dfi_radar_p1
-     integer :: dtidx_dim1, dtidx_dim2
+     integer :: dtend_dim3
+     integer :: num_dfi_radar_dim
+     integer :: dtidx_dim2
  
      ! Get size of dimensions
-     ix = size(forcet, dim=1)
-     km = size(forcet, dim=2)
-     km_m1 = km - 1
-     im = size(garea, dim=1)
-     !im = size(cactiv, dim=1)
-     dtend_dim = size(dtend, dim=3)
-     num_dfi_radar = size(ix_dfi_radar, dim=1)
-     num_dfi_radar_p1 = num_dfi_radar + 1
-     dtidx_dim1 = size(dtidx, dim=1)
+     dtend_dim3 = size(dtend, dim=3)
+     num_dfi_radar_dim = size(ix_dfi_radar, dim=1)
      dtidx_dim2 = size(dtidx, dim=2)
- 
+
      ! Open new file, overwriting previous contents
      call nc_check(nf90_create(trim(filename), IOR(NF90_CLOBBER,NF90_NETCDF4), ncFileID))
      call nc_check(nf90_Inquire(ncFileID, nDimensions, nVariables, nAttributes, unlimitedDimID))
- 
-     ! Define the dimensions
-     call nc_check(nf90_def_dim(ncid=ncFileID, name="ix", len=ix, dimid = ixDimID))
-     call nc_check(nf90_def_dim(ncid=ncFileID, name="km", len=km, dimid = kmDimID))
-     call nc_check(nf90_def_dim(ncid=ncFileID, name="im", len=im, dimid = imDimID))
-     call nc_check(nf90_def_dim(ncid=ncFileID, name="dtend_dim", len=dtend_dim, dimid = dtend_dimDimID))
-     call nc_check(nf90_def_dim(ncid=ncFileID, name="num_dfi_radar", len=num_dfi_radar, dimid = num_dfi_radarDimID))
-     call nc_check(nf90_def_dim(ncid=ncFileID, name="num_dfi_radar_p1", len=num_dfi_radar_p1, dimid = num_dfi_radar_p1DimID))
-     call nc_check(nf90_def_dim(ncid=ncFileID, name="dtidx_dim1", len=dtidx_dim1, dimid = dtidx_dim1DimID))
-     call nc_check(nf90_def_dim(ncid=ncFileID, name="dtidx_dim2", len=dtidx_dim2, dimid = dtidx_dim2DimID))
-     call nc_check(nf90_def_dim(ncid=ncFileID, name="nchem", len=nchem, dimid = nchemDimID))
-     call nc_check(nf90_def_dim(ncid=ncFileID, name="km_m1", len=km_m1, dimid = km_m1DimID))
 
-     ! Define ntracer global
-     call nc_check(nf90_put_att(ncFileID, NF90_GLOBAL, "ntracer", ntracer))
-     
+     ! Define the dimensions
+     call nc_check(nf90_def_dim(ncid=ncFileID, name="im", len=im, dimid=imDimID))
+     call nc_check(nf90_def_dim(ncid=ncFileID, name="km", len=km, dimid=kmDimID))
+     call nc_check(nf90_def_dim(ncid=ncFileID, name="dtend_dim3", len=dtend_dim3, dimid=dtend_dim3DimID))
+     call nc_check(nf90_def_dim(ncid=ncFileID, name="ntracers_p100", len=ntracer + 100, dimid=ntracers_p100DimID))
+     call nc_check(nf90_def_dim(ncid=ncFileID, name="dtidx_dim2", len=dtidx_dim2, dimid=dtidx_dim2DimID))
+     call nc_check(nf90_def_dim(ncid=ncFileID, name="num_dfi_radar", len=num_dfi_radar_dim, dimid=num_dfi_radarDimID))
+     call nc_check(nf90_def_dim(ncid=ncFileID, name="num_dfi_radar_p1", len=num_dfi_radar_dim + 1, dimid=num_dfi_radar_p1DimID))
+     call nc_check(nf90_def_dim(ncid=ncFileID, name="nchem", len=nchem, dimid = nchemDimID))
+     call nc_check(nf90_def_dim(ncid=ncFileID, name="fscav_dim", len=3, dimid = fscavDimID))
+
+     ! Define ntracer variable
+     call nc_check(nf90_def_var(ncid=ncFileID, name="ntracer", xtype=nf90_int, &
+                   varid=ntracerVarID))
+     call nc_check(nf90_put_att(ncFileID, ntracerVarID, "long_name", "number of tracers"))
+     call nc_check(nf90_put_att(ncFileID, ntracerVarID, "units",     "count"))
+
      ! Define the garea field
-     call nc_check(nf90_def_var(ncid=ncFileID,name="garea", xtype=nf90_double, &
+     call nc_check(nf90_def_var(ncid=ncFileID, name="garea", xtype=nf90_double, &
                    dimids=(/imDimID/), varid=gareaVarID))
-     call nc_check(nf90_put_att(ncFileID, gareaVarID, "long_name", "garea"))
-     call nc_check(nf90_put_att(ncFileID, gareaVarID, "units",     "Nondimensional"))
- 
-     ! Define dt global
-     call nc_check(nf90_put_att(ncFileID, NF90_GLOBAL, "dt", dt))
-     
-     ! Define flag_init global
-     if (flag_init) then
-        call nc_check(nf90_put_att(ncFileID, NF90_GLOBAL, "flag_init", 1))
-     else
-        call nc_check(nf90_put_att(ncFileID, NF90_GLOBAL, "flag_init", 0))
-     end if
-     
-     ! Define flag_restart global
-     if (flag_restart) then
-        call nc_check(nf90_put_att(ncFileID, NF90_GLOBAL, "flag_restart", 1))
-     else
-        call nc_check(nf90_put_att(ncFileID, NF90_GLOBAL, "flag_restart", 0))
-     end if
+     call nc_check(nf90_put_att(ncFileID, gareaVarID, "long_name", "grid cell area"))
+     call nc_check(nf90_put_att(ncFileID, gareaVarID, "units",     "m2"))
+
+     ! Define dt variable
+     call nc_check(nf90_def_var(ncid=ncFileID, name="dt", xtype=nf90_double, &
+                   varid=dtVarID))
+     call nc_check(nf90_put_att(ncFileID, dtVarID, "long_name", "physics time step"))
+     call nc_check(nf90_put_att(ncFileID, dtVarID, "units",     "s"))
+
+     ! Define flag_init variable
+     call nc_check(nf90_def_var(ncid=ncFileID, name="flag_init", xtype=nf90_int, &
+                   varid=flag_initVarID))
+     call nc_check(nf90_put_att(ncFileID, flag_initVarID, "long_name", "flag signaling first time step for time integration loop"))
+     call nc_check(nf90_put_att(ncFileID, flag_initVarID, "units",     "flag"))
+
+     ! Define flag_restart variable
+     call nc_check(nf90_def_var(ncid=ncFileID, name="flag_restart", xtype=nf90_int, &
+                   varid=flag_restartVarID))
+     call nc_check(nf90_put_att(ncFileID, flag_restartVarID, "long_name", "flag for restart (warmstart) or coldstart"))
+     call nc_check(nf90_put_att(ncFileID, flag_restartVarID, "units",     "flag"))
 
      ! Define the cactiv field
-     call nc_check(nf90_def_var(ncid=ncFileID,name="cactiv", xtype=nf90_int, &
-                   dimids=(/imDimID/), varid=cactivVarID))
-     call nc_check(nf90_put_att(ncFileID, gareaVarID, "long_name", "cactiv"))
-     call nc_check(nf90_put_att(ncFileID, gareaVarID, "units",     "Nondimensional"))
- 
+     if (present(cactiv)) then
+        call nc_check(nf90_def_var(ncid=ncFileID, name="cactiv", xtype=nf90_int, &
+                      dimids=(/imDimID/), varid=cactivVarID))
+        call nc_check(nf90_put_att(ncFileID, cactivVarID, "long_name", "convective activity memory"))
+        call nc_check(nf90_put_att(ncFileID, cactivVarID, "units",     "Nondimensional"))
+     end if
+
      ! Define the cactiv_m field
-     call nc_check(nf90_def_var(ncid=ncFileID,name="cactiv_m", xtype=nf90_int, &
-                   dimids=(/imDimID/), varid=cactiv_mVarID))
-     call nc_check(nf90_put_att(ncFileID, gareaVarID, "long_name", "cactiv_m"))
-     call nc_check(nf90_put_att(ncFileID, gareaVarID, "units",     "Nondimensional"))
+     if (present(cactiv_m)) then
+        call nc_check(nf90_def_var(ncid=ncFileID, name="cactiv_m", xtype=nf90_int, &
+                      dimids=(/imDimID/), varid=cactiv_mVarID))
+        call nc_check(nf90_put_att(ncFileID, cactiv_mVarID, "long_name", "mid-level cloud convective activity memory"))
+        call nc_check(nf90_put_att(ncFileID, cactiv_mVarID, "units",     "Nondimensional"))
+     end if
 
-     ! Define g global
-     call nc_check(nf90_put_att(ncFileID, NF90_GLOBAL, "g", g))
-     
-     ! Define cp global
-     call nc_check(nf90_put_att(ncFileID, NF90_GLOBAL, "cp", cp))
-     
-     ! Define xlv global
-     call nc_check(nf90_put_att(ncFileID, NF90_GLOBAL, "xlv", xlv))
-     
-     ! Define r_v global
-     call nc_check(nf90_put_att(ncFileID, NF90_GLOBAL, "r_v", r_v))
-     
+     ! Define g variable
+     call nc_check(nf90_def_var(ncid=ncFileID, name="g", xtype=nf90_double, &
+                   varid=gVarID))
+     call nc_check(nf90_put_att(ncFileID, gVarID, "long_name", "gravitational acceleration"))
+     call nc_check(nf90_put_att(ncFileID, gVarID, "units",     "m s-2"))
+
+     ! Define cp variable
+     call nc_check(nf90_def_var(ncid=ncFileID, name="cp", xtype=nf90_double, &
+                   varid=cpVarID))
+     call nc_check(nf90_put_att(ncFileID, cpVarID, "long_name", "specific heat of dry air at constant pressure"))
+     call nc_check(nf90_put_att(ncFileID, cpVarID, "units",     "J kg-1 K-1"))
+
+     ! Define xlv variable
+     call nc_check(nf90_def_var(ncid=ncFileID, name="xlv", xtype=nf90_double, &
+                   varid=xlvVarID))
+     call nc_check(nf90_put_att(ncFileID, xlvVarID, "long_name", "latent heat of evaporation/sublimation"))
+     call nc_check(nf90_put_att(ncFileID, xlvVarID, "units",     "J kg-1"))
+
+     ! Define r_v variable
+     call nc_check(nf90_def_var(ncid=ncFileID, name="r_v", xtype=nf90_double, &
+                   varid=r_vVarID))
+     call nc_check(nf90_put_att(ncFileID, r_vVarID, "long_name", "ideal gas constant for water vapor"))
+     call nc_check(nf90_put_att(ncFileID, r_vVarID, "units",     "J kg-1 K-1"))
+
      ! Define the forcet field
-     call nc_check(nf90_def_var(ncid=ncFileID,name="forcet", xtype=nf90_double, &
-                   dimids=(/ixDimID, kmDimID/), varid=forcetVarID))
-     call nc_check(nf90_put_att(ncFileID, forcetVarID, "long_name", "forcet"))
-     call nc_check(nf90_put_att(ncFileID, forcetVarID, "units",     "Nondimensional"))
- 
-     ! Define the forceqv_spechum field
-     call nc_check(nf90_def_var(ncid=ncFileID,name="forceqv_spechum", xtype=nf90_double, &
-                   dimids=(/ixDimID, kmDimID/), varid=forceqv_spechumVarID))
-     call nc_check(nf90_put_att(ncFileID, forceqv_spechumVarID, "long_name", "forceqv_spechum"))
-     call nc_check(nf90_put_att(ncFileID, forceqv_spechumVarID, "units",     "Nondimensional"))
- 
-     ! Define the phil field
-     call nc_check(nf90_def_var(ncid=ncFileID,name="phil", xtype=nf90_double, &
-                   dimids=(/ixDimID, kmDimID/), varid=philVarID))
-     call nc_check(nf90_put_att(ncFileID, philVarID, "long_name", "phil"))
-     call nc_check(nf90_put_att(ncFileID, philVarID, "units",     "Nondimensional"))
- 
-     ! Define the raincv field
-     call nc_check(nf90_def_var(ncid=ncFileID,name="raincv", xtype=nf90_double, &
-                   dimids=(/imDimID/), varid=raincvVarID))
-     call nc_check(nf90_put_att(ncFileID, raincvVarID, "long_name", "raincv"))
-     call nc_check(nf90_put_att(ncFileID, raincvVarID, "units",     "Nondimensional"))
- 
-     ! Define the qv_spechum field
-     call nc_check(nf90_def_var(ncid=ncFileID,name="qv_spechum", xtype=nf90_double, &
-                   dimids=(/ixDimID, kmDimID/), varid=qv_spechumVarID))
-     call nc_check(nf90_put_att(ncFileID, qv_spechumVarID, "long_name", "qv_spechum"))
-     call nc_check(nf90_put_att(ncFileID, qv_spechumVarID, "units",     "Nondimensional"))
- 
-     ! Define the t field
-     call nc_check(nf90_def_var(ncid=ncFileID,name="t", xtype=nf90_double, &
-                   dimids=(/ixDimID, kmDimID/), varid=tVarID))
-     call nc_check(nf90_put_att(ncFileID, tVarID, "long_name", "t"))
-     call nc_check(nf90_put_att(ncFileID, tVarID, "units",     "Nondimensional"))
- 
-     ! Define the cld1d field
-     call nc_check(nf90_def_var(ncid=ncFileID,name="cld1d", xtype=nf90_double, &
-                   dimids=(/imDimID/), varid=cld1dVarID))
-     call nc_check(nf90_put_att(ncFileID, cld1dVarID, "long_name", "cld1d"))
-     call nc_check(nf90_put_att(ncFileID, cld1dVarID, "units",     "Nondimensional"))
- 
-     ! Define the us field
-     call nc_check(nf90_def_var(ncid=ncFileID,name="us", xtype=nf90_double, &
-                   dimids=(/ixDimID, kmDimID/), varid=usVarID))
-     call nc_check(nf90_put_att(ncFileID, usVarID, "long_name", "us"))
-     call nc_check(nf90_put_att(ncFileID, usVarID, "units",     "Nondimensional"))
- 
-     ! Define the vs field
-     call nc_check(nf90_def_var(ncid=ncFileID,name="vs", xtype=nf90_double, &
-                   dimids=(/ixDimID, kmDimID/), varid=vsVarID))
-     call nc_check(nf90_put_att(ncFileID, vsVarID, "long_name", "vs"))
-     call nc_check(nf90_put_att(ncFileID, vsVarID, "units",     "Nondimensional"))
- 
-     ! Define the t2di field
-     call nc_check(nf90_def_var(ncid=ncFileID,name="t2di", xtype=nf90_double, &
-                   dimids=(/ixDimID, kmDimID/), varid=t2diVarID))
-     call nc_check(nf90_put_att(ncFileID, t2diVarID, "long_name", "t2di"))
-     call nc_check(nf90_put_att(ncFileID, t2diVarID, "units",     "Nondimensional"))
- 
-     ! Define the w field
-     call nc_check(nf90_def_var(ncid=ncFileID,name="w", xtype=nf90_double, &
-                   dimids=(/ixDimID, kmDimID/), varid=wVarID))
-     call nc_check(nf90_put_att(ncFileID, wVarID, "long_name", "w"))
-     call nc_check(nf90_put_att(ncFileID, wVarID, "units",     "Nondimensional"))
- 
-     ! Define the qv2di_spechum field
-     call nc_check(nf90_def_var(ncid=ncFileID,name="qv2di_spechum", xtype=nf90_double, &
-                   dimids=(/ixDimID, kmDimID/), varid=qv2di_spechumVarID))
-     call nc_check(nf90_put_att(ncFileID, qv2di_spechumVarID, "long_name", "qv2di_spechum"))
-     call nc_check(nf90_put_att(ncFileID, qv2di_spechumVarID, "units",     "Nondimensional"))
- 
-     ! Define the p2di field
-     call nc_check(nf90_def_var(ncid=ncFileID,name="p2di", xtype=nf90_double, &
-                   dimids=(/ixDimID, kmDimID/), varid=p2diVarID))
-     call nc_check(nf90_put_att(ncFileID, p2diVarID, "long_name", "p2di"))
-     call nc_check(nf90_put_att(ncFileID, p2diVarID, "units",     "Nondimensional"))
- 
-     ! Define the psuri field
-     call nc_check(nf90_def_var(ncid=ncFileID,name="psuri", xtype=nf90_double, &
-                   dimids=(/imDimID/), varid=psuriVarID))
-     call nc_check(nf90_put_att(ncFileID, psuriVarID, "long_name", "psuri"))
-     call nc_check(nf90_put_att(ncFileID, psuriVarID, "units",     "Nondimensional"))
- 
-     ! Define the hbot field
-     call nc_check(nf90_def_var(ncid=ncFileID,name="hbot", xtype=nf90_int, &
-                   dimids=(/imDimID/), varid=hbotVarID))
-     call nc_check(nf90_put_att(ncFileID, hbotVarID, "long_name", "hbot"))
-     call nc_check(nf90_put_att(ncFileID, hbotVarID, "units",     "Nondimensional"))
- 
-     ! Define the htop field
-     call nc_check(nf90_def_var(ncid=ncFileID,name="htop", xtype=nf90_int, &
-                   dimids=(/imDimID/), varid=htopVarID))
-     call nc_check(nf90_put_att(ncFileID, htopVarID, "long_name", "htop"))
-     call nc_check(nf90_put_att(ncFileID, htopVarID, "units",     "Nondimensional"))
- 
-     ! Define the kcnv field
-     call nc_check(nf90_def_var(ncid=ncFileID,name="kcnv", xtype=nf90_int, &
-                   dimids=(/imDimID/), varid=kcnvVarID))
-     call nc_check(nf90_put_att(ncFileID, kcnvVarID, "long_name", "kcnv"))
-     call nc_check(nf90_put_att(ncFileID, kcnvVarID, "units",     "Nondimensional"))
- 
-     ! Define the xland field
-     call nc_check(nf90_def_var(ncid=ncFileID,name="xland", xtype=nf90_int, &
-                   dimids=(/imDimID/), varid=xlandVarID))
-     call nc_check(nf90_put_att(ncFileID, xlandVarID, "long_name", "xland"))
-     call nc_check(nf90_put_att(ncFileID, xlandVarID, "units",     "Nondimensional"))
- 
-     ! Define the hfx2 field
-     call nc_check(nf90_def_var(ncid=ncFileID,name="hfx2", xtype=nf90_double, &
-                   dimids=(/imDimID/), varid=hfx2VarID))
-     call nc_check(nf90_put_att(ncFileID, hfx2VarID, "long_name", "hfx2"))
-     call nc_check(nf90_put_att(ncFileID, hfx2VarID, "units",     "Nondimensional"))
- 
-     ! Define the qfx2 field
-     call nc_check(nf90_def_var(ncid=ncFileID,name="qfx2", xtype=nf90_double, &
-                   dimids=(/imDimID/), varid=qfx2VarID))
-     call nc_check(nf90_put_att(ncFileID, qfx2VarID, "long_name", "qfx2"))
-     call nc_check(nf90_put_att(ncFileID, qfx2VarID, "units",     "Nondimensional"))
- 
-     ! Define the aod_gf field
-     call nc_check(nf90_def_var(ncid=ncFileID,name="aod_gf", xtype=nf90_double, &
-                   dimids=(/imDimID/), varid=aod_gfVarID))
-     call nc_check(nf90_put_att(ncFileID, aod_gfVarID, "long_name", "aod_gf"))
-     call nc_check(nf90_put_att(ncFileID, aod_gfVarID, "units",     "Nondimensional"))
- 
-     ! Define the cliw field
-     call nc_check(nf90_def_var(ncid=ncFileID,name="cliw", xtype=nf90_double, &
-                   dimids=(/ixDimID, kmDimID/), varid=cliwVarID))
-     call nc_check(nf90_put_att(ncFileID, cliwVarID, "long_name", "cliw"))
-     call nc_check(nf90_put_att(ncFileID, cliwVarID, "units",     "Nondimensional"))
- 
-     ! Define the clcw field
-     call nc_check(nf90_def_var(ncid=ncFileID,name="clcw", xtype=nf90_double, &
-                   dimids=(/ixDimID, kmDimID/), varid=clcwVarID))
-     call nc_check(nf90_put_att(ncFileID, clcwVarID, "long_name", "clcw"))
-     call nc_check(nf90_put_att(ncFileID, clcwVarID, "units",     "Nondimensional"))
- 
-     ! Define the pbl field
-     call nc_check(nf90_def_var(ncid=ncFileID,name="pbl", xtype=nf90_double, &
-                   dimids=(/imDimID/), varid=pblVarID))
-     call nc_check(nf90_put_att(ncFileID, pblVarID, "long_name", "pbl"))
-     call nc_check(nf90_put_att(ncFileID, pblVarID, "units",     "Nondimensional"))
- 
-     ! Define the ud_mf field
-     call nc_check(nf90_def_var(ncid=ncFileID,name="ud_mf", xtype=nf90_double, &
-                   dimids=(/imDimID, kmDimID/), varid=ud_mfVarID))
-     call nc_check(nf90_put_att(ncFileID, ud_mfVarID, "long_name", "ud_mf"))
-     call nc_check(nf90_put_att(ncFileID, ud_mfVarID, "units",     "Nondimensional"))
- 
-     ! Define the dd_mf field
-     call nc_check(nf90_def_var(ncid=ncFileID,name="dd_mf", xtype=nf90_double, &
-                   dimids=(/imDimID, kmDimID/), varid=dd_mfVarID))
-     call nc_check(nf90_put_att(ncFileID, dd_mfVarID, "long_name", "dd_mf"))
-     call nc_check(nf90_put_att(ncFileID, dd_mfVarID, "units",     "Nondimensional"))
- 
-     ! Define the dt_mf field
-     call nc_check(nf90_def_var(ncid=ncFileID,name="dt_mf", xtype=nf90_double, &
-                   dimids=(/imDimID, kmDimID/), varid=dt_mfVarID))
-     call nc_check(nf90_put_att(ncFileID, dt_mfVarID, "long_name", "dt_mf"))
-     call nc_check(nf90_put_att(ncFileID, dt_mfVarID, "units",     "Nondimensional"))
- 
-     ! Define the cnvw_moist field
-     call nc_check(nf90_def_var(ncid=ncFileID,name="cnvw_moist", xtype=nf90_double, &
-                   dimids=(/ixDimID, kmDimID/), varid=cnvw_moistVarID))
-     call nc_check(nf90_put_att(ncFileID, cnvw_moistVarID, "long_name", "cnvw_moist"))
-     call nc_check(nf90_put_att(ncFileID, cnvw_moistVarID, "units",     "Nondimensional"))
- 
-     ! Define the cnvc field
-     call nc_check(nf90_def_var(ncid=ncFileID,name="cnvc", xtype=nf90_double, &
-                   dimids=(/ixDimID, kmDimID/), varid=cnvcVarID))
-     call nc_check(nf90_put_att(ncFileID, cnvcVarID, "long_name", "cnvc"))
-     call nc_check(nf90_put_att(ncFileID, cnvcVarID, "units",     "Nondimensional"))
- 
-     ! Define imfshalcnv global
-     call nc_check(nf90_put_att(ncFileID, NF90_GLOBAL, "imfshalcnv", imfshalcnv))
-     
-     ! Define flag_for_scnv_generic_tend global
-     if (flag_for_scnv_generic_tend) then
-        call nc_check(nf90_put_att(ncFileID, NF90_GLOBAL, "flag_for_scnv_generic_tend", 1))
-     else
-        call nc_check(nf90_put_att(ncFileID, NF90_GLOBAL, "flag_for_scnv_generic_tend", 0))
+     if (present(forcet)) then
+        call nc_check(nf90_def_var(ncid=ncFileID, name="forcet", xtype=nf90_double, &
+                      dimids=(/imDimID, kmDimID/), varid=forcetVarID))
+        call nc_check(nf90_put_att(ncFileID, forcetVarID, "long_name", "temperature tendency due to dynamics only"))
+        call nc_check(nf90_put_att(ncFileID, forcetVarID, "units",     "K s-1"))
      end if
 
-     ! Define flag_for_dcnv_generic_tend global
-     if (flag_for_dcnv_generic_tend) then
-        call nc_check(nf90_put_att(ncFileID, NF90_GLOBAL, "flag_for_dcnv_generic_tend", 1))
-     else
-        call nc_check(nf90_put_att(ncFileID, NF90_GLOBAL, "flag_for_dcnv_generic_tend", 0))
+     ! Define the forceqv_spechum field
+     if (present(forceqv_spechum)) then
+        call nc_check(nf90_def_var(ncid=ncFileID, name="forceqv_spechum", xtype=nf90_double, &
+                      dimids=(/imDimID, kmDimID/), varid=forceqv_spechumVarID))
+        call nc_check(nf90_put_att(ncFileID, forceqv_spechumVarID, "long_name", "moisture tendency due to dynamics only"))
+        call nc_check(nf90_put_att(ncFileID, forceqv_spechumVarID, "units",     "kg kg-1 s-1"))
      end if
+
+     ! Define the phil field
+     call nc_check(nf90_def_var(ncid=ncFileID, name="phil", xtype=nf90_double, &
+                   dimids=(/imDimID, kmDimID/), varid=philVarID))
+     call nc_check(nf90_put_att(ncFileID, philVarID, "long_name", "layer geopotential"))
+     call nc_check(nf90_put_att(ncFileID, philVarID, "units",     "m2 s-2"))
+
+     ! Define the raincv field
+     call nc_check(nf90_def_var(ncid=ncFileID, name="raincv", xtype=nf90_double, &
+                   dimids=(/imDimID/), varid=raincvVarID))
+     call nc_check(nf90_put_att(ncFileID, raincvVarID, "long_name", "deep convective rainfall amount on physics timestep"))
+     call nc_check(nf90_put_att(ncFileID, raincvVarID, "units",     "m"))
+
+     ! Define the qv_spechum field
+     call nc_check(nf90_def_var(ncid=ncFileID, name="qv_spechum", xtype=nf90_double, &
+                   dimids=(/imDimID, kmDimID/), varid=qv_spechumVarID))
+     call nc_check(nf90_put_att(ncFileID, qv_spechumVarID, "long_name", "water vapor specific humidity updated by physics"))
+     call nc_check(nf90_put_att(ncFileID, qv_spechumVarID, "units",     "kg kg-1"))
+
+     ! Define the t field
+     call nc_check(nf90_def_var(ncid=ncFileID, name="t", xtype=nf90_double, &
+                   dimids=(/imDimID, kmDimID/), varid=tVarID))
+     call nc_check(nf90_put_att(ncFileID, tVarID, "long_name", "updated temperature"))
+     call nc_check(nf90_put_att(ncFileID, tVarID, "units",     "K"))
+
+     ! Define the cld1d field
+     call nc_check(nf90_def_var(ncid=ncFileID, name="cld1d", xtype=nf90_double, &
+                   dimids=(/imDimID/), varid=cld1dVarID))
+     call nc_check(nf90_put_att(ncFileID, cld1dVarID, "long_name", "cloud work function"))
+     call nc_check(nf90_put_att(ncFileID, cld1dVarID, "units",     "m2 s-2"))
+
+     ! Define the us field
+     call nc_check(nf90_def_var(ncid=ncFileID, name="us", xtype=nf90_double, &
+                   dimids=(/imDimID, kmDimID/), varid=usVarID))
+     call nc_check(nf90_put_att(ncFileID, usVarID, "long_name", "updated x-direction wind"))
+     call nc_check(nf90_put_att(ncFileID, usVarID, "units",     "m s-1"))
+
+     ! Define the vs field
+     call nc_check(nf90_def_var(ncid=ncFileID, name="vs", xtype=nf90_double, &
+                   dimids=(/imDimID, kmDimID/), varid=vsVarID))
+     call nc_check(nf90_put_att(ncFileID, vsVarID, "long_name", "updated y-direction wind"))
+     call nc_check(nf90_put_att(ncFileID, vsVarID, "units",     "m s-1"))
+
+     ! Define the t2di field
+     call nc_check(nf90_def_var(ncid=ncFileID, name="t2di", xtype=nf90_double, &
+                   dimids=(/imDimID, kmDimID/), varid=t2diVarID))
+     call nc_check(nf90_put_att(ncFileID, t2diVarID, "long_name", "mid-layer temperature"))
+     call nc_check(nf90_put_att(ncFileID, t2diVarID, "units",     "K"))
+
+     ! Define the w field
+     call nc_check(nf90_def_var(ncid=ncFileID, name="w", xtype=nf90_double, &
+                   dimids=(/imDimID, kmDimID/), varid=wVarID))
+     call nc_check(nf90_put_att(ncFileID, wVarID, "long_name", "layer mean vertical velocity"))
+     call nc_check(nf90_put_att(ncFileID, wVarID, "units",     "Pa s-1"))
+
+     ! Define the qv2di_spechum field
+     call nc_check(nf90_def_var(ncid=ncFileID, name="qv2di_spechum", xtype=nf90_double, &
+                   dimids=(/imDimID, kmDimID/), varid=qv2di_spechumVarID))
+     call nc_check(nf90_put_att(ncFileID, qv2di_spechumVarID, "long_name", "water vapor specific humidity"))
+     call nc_check(nf90_put_att(ncFileID, qv2di_spechumVarID, "units",     "kg kg-1"))
+
+     ! Define the p2di field
+     call nc_check(nf90_def_var(ncid=ncFileID, name="p2di", xtype=nf90_double, &
+                   dimids=(/imDimID, kmDimID/), varid=p2diVarID))
+     call nc_check(nf90_put_att(ncFileID, p2diVarID, "long_name", "mean layer pressure"))
+     call nc_check(nf90_put_att(ncFileID, p2diVarID, "units",     "Pa"))
+
+     ! Define the psuri field
+     call nc_check(nf90_def_var(ncid=ncFileID, name="psuri", xtype=nf90_double, &
+                   dimids=(/imDimID/), varid=psuriVarID))
+     call nc_check(nf90_put_att(ncFileID, psuriVarID, "long_name", "surface pressure"))
+     call nc_check(nf90_put_att(ncFileID, psuriVarID, "units",     "Pa"))
+
+     ! Define the hbot field
+     call nc_check(nf90_def_var(ncid=ncFileID, name="hbot", xtype=nf90_int, &
+                   dimids=(/imDimID/), varid=hbotVarID))
+     call nc_check(nf90_put_att(ncFileID, hbotVarID, "long_name", "index for cloud base"))
+     call nc_check(nf90_put_att(ncFileID, hbotVarID, "units",     "index"))
+
+     ! Define the htop field
+     call nc_check(nf90_def_var(ncid=ncFileID, name="htop", xtype=nf90_int, &
+                   dimids=(/imDimID/), varid=htopVarID))
+     call nc_check(nf90_put_att(ncFileID, htopVarID, "long_name", "index for cloud top"))
+     call nc_check(nf90_put_att(ncFileID, htopVarID, "units",     "index"))
+
+     ! Define the kcnv field
+     call nc_check(nf90_def_var(ncid=ncFileID, name="kcnv", xtype=nf90_int, &
+                   dimids=(/imDimID/), varid=kcnvVarID))
+     call nc_check(nf90_put_att(ncFileID, kcnvVarID, "long_name", "deep convection: 0=no, 1=yes"))
+     call nc_check(nf90_put_att(ncFileID, kcnvVarID, "units",     "flag"))
+
+     ! Define the xland field
+     call nc_check(nf90_def_var(ncid=ncFileID, name="xland", xtype=nf90_int, &
+                   dimids=(/imDimID/), varid=xlandVarID))
+     call nc_check(nf90_put_att(ncFileID, xlandVarID, "long_name", "landmask: sea/land/ice=0/1/2"))
+     call nc_check(nf90_put_att(ncFileID, xlandVarID, "units",     "flag"))
+
+     ! Define the hfx2 field
+     call nc_check(nf90_def_var(ncid=ncFileID, name="hfx2", xtype=nf90_double, &
+                   dimids=(/imDimID/), varid=hfx2VarID))
+     call nc_check(nf90_put_att(ncFileID, hfx2VarID, "long_name", "kinematic surface upward sensible heat flux reduced by surface roughness and vegetation"))
+     call nc_check(nf90_put_att(ncFileID, hfx2VarID, "units",     "K m s-1"))
+
+     ! Define the qfx2 field
+     call nc_check(nf90_def_var(ncid=ncFileID, name="qfx2", xtype=nf90_double, &
+                   dimids=(/imDimID/), varid=qfx2VarID))
+     call nc_check(nf90_put_att(ncFileID, qfx2VarID, "long_name", "kinematic surface upward latent heat flux"))
+     call nc_check(nf90_put_att(ncFileID, qfx2VarID, "units",     "kg kg-1 m s-1"))
+
+     ! Define the aod_gf field
+     if (present(aod_gf)) then
+        call nc_check(nf90_def_var(ncid=ncFileID, name="aod_gf", xtype=nf90_double, &
+                      dimids=(/imDimID/), varid=aod_gfVarID))
+        call nc_check(nf90_put_att(ncFileID, aod_gfVarID, "long_name", "aerosol optical depth used in Grell-Freitas Convective Parameterization"))
+        call nc_check(nf90_put_att(ncFileID, aod_gfVarID, "units",     "none"))
+     end if
+
+     ! Define the cliw field
+     call nc_check(nf90_def_var(ncid=ncFileID, name="cliw", xtype=nf90_double, &
+                   dimids=(/imDimID, kmDimID/), varid=cliwVarID))
+     call nc_check(nf90_put_att(ncFileID, cliwVarID, "long_name", "ratio of mass of ice water to mass of dry air plus vapor (without condensates) in the convectively transported tracer array"))
+     call nc_check(nf90_put_att(ncFileID, cliwVarID, "units",     "kg kg-1"))
+
+     ! Define the clcw field
+     call nc_check(nf90_def_var(ncid=ncFileID, name="clcw", xtype=nf90_double, &
+                   dimids=(/imDimID, kmDimID/), varid=clcwVarID))
+     call nc_check(nf90_put_att(ncFileID, clcwVarID, "long_name", "ratio of mass of cloud water to mass of dry air plus vapor (without condensates) in the convectively transported tracer array"))
+     call nc_check(nf90_put_att(ncFileID, clcwVarID, "units",     "kg kg-1"))
+
+     ! Define the pbl field
+     call nc_check(nf90_def_var(ncid=ncFileID, name="pbl", xtype=nf90_double, &
+                   dimids=(/imDimID/), varid=pblVarID))
+     call nc_check(nf90_put_att(ncFileID, pblVarID, "long_name", "PBL thickness"))
+     call nc_check(nf90_put_att(ncFileID, pblVarID, "units",     "m"))
+
+     ! Define the ud_mf field
+     if (present(ud_mf)) then
+        call nc_check(nf90_def_var(ncid=ncFileID, name="ud_mf", xtype=nf90_double, &
+                      dimids=(/imDimID, kmDimID/), varid=ud_mfVarID))
+        call nc_check(nf90_put_att(ncFileID, ud_mfVarID, "long_name", "(updraft mass flux) * delt"))
+        call nc_check(nf90_put_att(ncFileID, ud_mfVarID, "units",     "kg m-2"))
+     end if
+
+     ! Define the dd_mf field
+     call nc_check(nf90_def_var(ncid=ncFileID, name="dd_mf", xtype=nf90_double, &
+                   dimids=(/imDimID, kmDimID/), varid=dd_mfVarID))
+     call nc_check(nf90_put_att(ncFileID, dd_mfVarID, "long_name", "(downdraft mass flux) * delt"))
+     call nc_check(nf90_put_att(ncFileID, dd_mfVarID, "units",     "kg m-2"))
+
+     ! Define the dt_mf field
+     call nc_check(nf90_def_var(ncid=ncFileID, name="dt_mf", xtype=nf90_double, &
+                   dimids=(/imDimID, kmDimID/), varid=dt_mfVarID))
+     call nc_check(nf90_put_att(ncFileID, dt_mfVarID, "long_name", "(detrainment mass flux) * delt"))
+     call nc_check(nf90_put_att(ncFileID, dt_mfVarID, "units",     "kg m-2"))
+
+     ! Define the cnvw_moist field
+     call nc_check(nf90_def_var(ncid=ncFileID, name="cnvw_moist", xtype=nf90_double, &
+                   dimids=(/imDimID, kmDimID/), varid=cnvw_moistVarID))
+     call nc_check(nf90_put_att(ncFileID, cnvw_moistVarID, "long_name", "moist convective cloud water mixing ratio"))
+     call nc_check(nf90_put_att(ncFileID, cnvw_moistVarID, "units",     "kg kg-1"))
+
+     ! Define the cnvc field
+     call nc_check(nf90_def_var(ncid=ncFileID, name="cnvc", xtype=nf90_double, &
+                   dimids=(/imDimID, kmDimID/), varid=cnvcVarID))
+     call nc_check(nf90_put_att(ncFileID, cnvcVarID, "long_name", "convective cloud cover"))
+     call nc_check(nf90_put_att(ncFileID, cnvcVarID, "units",     "frac"))
+
+     ! Define imfshalcnv variable
+     call nc_check(nf90_def_var(ncid=ncFileID, name="imfshalcnv", xtype=nf90_int, &
+                   varid=imfshalcnvVarID))
+     call nc_check(nf90_put_att(ncFileID, imfshalcnvVarID, "long_name", "flag for mass-flux shallow convection scheme"))
+     call nc_check(nf90_put_att(ncFileID, imfshalcnvVarID, "units",     "flag"))
+
+     ! Define flag_for_scnv_generic_tend variable
+     call nc_check(nf90_def_var(ncid=ncFileID, name="flag_for_scnv_generic_tend", xtype=nf90_int, &
+                   varid=flag_for_scnv_generic_tendVarID))
+     call nc_check(nf90_put_att(ncFileID, flag_for_scnv_generic_tendVarID, "long_name", "true if GFS_SCNV_generic should calculate tendencies"))
+     call nc_check(nf90_put_att(ncFileID, flag_for_scnv_generic_tendVarID, "units",     "flag"))
+
+     ! Define flag_for_dcnv_generic_tend variable
+     call nc_check(nf90_def_var(ncid=ncFileID, name="flag_for_dcnv_generic_tend", xtype=nf90_int, &
+                   varid=flag_for_dcnv_generic_tendVarID))
+     call nc_check(nf90_put_att(ncFileID, flag_for_dcnv_generic_tendVarID, "long_name", "true if GFS_DCNV_generic should calculate tendencies"))
+     call nc_check(nf90_put_att(ncFileID, flag_for_dcnv_generic_tendVarID, "units",     "flag"))
 
      ! Define the dtend field
-     call nc_check(nf90_def_var(ncid=ncFileID,name="dtend", xtype=nf90_double, &
-                   dimids=(/imDimID, kmDimID, dtend_dimDimID/), varid=dtendVarID))
-     call nc_check(nf90_put_att(ncFileID, dtendVarID, "long_name", "dtend"))
-     call nc_check(nf90_put_att(ncFileID, dtendVarID, "units",     "Nondimensional"))
- 
+     if (present(dtend)) then
+        call nc_check(nf90_def_var(ncid=ncFileID, name="dtend", xtype=nf90_double, &
+                      dimids=(/imDimID, kmDimID, dtend_dim3DimID/), varid=dtendVarID))
+        call nc_check(nf90_put_att(ncFileID, dtendVarID, "long_name", "diagnostic tendencies for state variables"))
+        call nc_check(nf90_put_att(ncFileID, dtendVarID, "units",     "mixed"))
+     end if
+
      ! Define the dtidx field
-     call nc_check(nf90_def_var(ncid=ncFileID,name="dtidx", xtype=nf90_int, &
-                   dimids=(/dtidx_dim1DimID, dtidx_dim2DimID/), varid=dtidxVarID))
-     call nc_check(nf90_put_att(ncFileID, dtidxVarID, "long_name", "dtidx"))
-     call nc_check(nf90_put_att(ncFileID, dtidxVarID, "units",     "Nondimensional"))
- 
-     ! Define ntqv global
-     call nc_check(nf90_put_att(ncFileID, NF90_GLOBAL, "ntqv", ntqv))
+     call nc_check(nf90_def_var(ncid=ncFileID, name="dtidx", xtype=nf90_int, &
+                   dimids=(/ntracers_p100DimID, dtidx_dim2DimID/), varid=dtidxVarID))
+     call nc_check(nf90_put_att(ncFileID, dtidxVarID, "long_name", "index of state-variable and process in last dimension of diagnostic tendencies array AKA cumulative_change_index"))
+     call nc_check(nf90_put_att(ncFileID, dtidxVarID, "units",     "index"))
 
-     ! Define ntiw global
-     call nc_check(nf90_put_att(ncFileID, NF90_GLOBAL, "ntiw", ntiw))
+     ! Define ntqv variable
+     call nc_check(nf90_def_var(ncid=ncFileID, name="ntqv", xtype=nf90_int, &
+                   varid=ntqvVarID))
+     call nc_check(nf90_put_att(ncFileID, ntqvVarID, "long_name", "tracer index for water vapor (specific humidity)"))
+     call nc_check(nf90_put_att(ncFileID, ntqvVarID, "units",     "index"))
 
-     ! Define ntcw global
-     call nc_check(nf90_put_att(ncFileID, NF90_GLOBAL, "ntcw", ntcw))
+     ! Define ntiw variable
+     call nc_check(nf90_def_var(ncid=ncFileID, name="ntiw", xtype=nf90_int, &
+                   varid=ntiwVarID))
+     call nc_check(nf90_put_att(ncFileID, ntiwVarID, "long_name", "tracer index for ice water"))
+     call nc_check(nf90_put_att(ncFileID, ntiwVarID, "units",     "index"))
 
-     ! Define index_of_temperature global
-     call nc_check(nf90_put_att(ncFileID, NF90_GLOBAL, "index_of_temperature", index_of_temperature))
+     ! Define ntcw variable
+     call nc_check(nf90_def_var(ncid=ncFileID, name="ntcw", xtype=nf90_int, &
+                   varid=ntcwVarID))
+     call nc_check(nf90_put_att(ncFileID, ntcwVarID, "long_name", "tracer index for cloud condensate (or liquid water)"))
+     call nc_check(nf90_put_att(ncFileID, ntcwVarID, "units",     "index"))
 
-     ! Define index_of_x_wind global
-     call nc_check(nf90_put_att(ncFileID, NF90_GLOBAL, "index_of_x_wind", index_of_x_wind))
+     ! Define index_of_temperature variable
+     call nc_check(nf90_def_var(ncid=ncFileID, name="index_of_temperature", xtype=nf90_int, &
+                   varid=index_of_temperatureVarID))
+     call nc_check(nf90_put_att(ncFileID, index_of_temperatureVarID, "long_name", "index of temperature in first dimension of array cumulative change index"))
+     call nc_check(nf90_put_att(ncFileID, index_of_temperatureVarID, "units",     "index"))
 
-     ! Define index_of_y_wind global
-     call nc_check(nf90_put_att(ncFileID, NF90_GLOBAL, "index_of_y_wind", index_of_y_wind))
+     ! Define index_of_x_wind variable
+     call nc_check(nf90_def_var(ncid=ncFileID, name="index_of_x_wind", xtype=nf90_int, &
+                   varid=index_of_x_windVarID))
+     call nc_check(nf90_put_att(ncFileID, index_of_x_windVarID, "long_name", "index of x-wind in first dimension of array cumulative change index"))
+     call nc_check(nf90_put_att(ncFileID, index_of_x_windVarID, "units",     "index"))
 
-     ! Define index_of_process_scnv global
-     call nc_check(nf90_put_att(ncFileID, NF90_GLOBAL, "index_of_process_scnv", index_of_process_scnv))
+     ! Define index_of_y_wind variable
+     call nc_check(nf90_def_var(ncid=ncFileID, name="index_of_y_wind", xtype=nf90_int, &
+                   varid=index_of_y_windVarID))
+     call nc_check(nf90_put_att(ncFileID, index_of_y_windVarID, "long_name", "index of x-wind in first dimension of array cumulative change index"))
+     call nc_check(nf90_put_att(ncFileID, index_of_y_windVarID, "units",     "index"))
 
-     ! Define index_of_process_dcnv global
-     call nc_check(nf90_put_att(ncFileID, NF90_GLOBAL, "index_of_process_dcnv", index_of_process_dcnv))
+     ! Define index_of_process_scnv variable
+     call nc_check(nf90_def_var(ncid=ncFileID, name="index_of_process_scnv", xtype=nf90_int, &
+                   varid=index_of_process_scnvVarID))
+     call nc_check(nf90_put_att(ncFileID, index_of_process_scnvVarID, "long_name", "index of shallow convection process in second dimension of array cumulative change index"))
+     call nc_check(nf90_put_att(ncFileID, index_of_process_scnvVarID, "units",     "index"))
 
-     ! Define fhour global
-     call nc_check(nf90_put_att(ncFileID, NF90_GLOBAL, "fhour", fhour))
+     ! Define index_of_process_dcnv variable
+     call nc_check(nf90_def_var(ncid=ncFileID, name="index_of_process_dcnv", xtype=nf90_int, &
+                   varid=index_of_process_dcnvVarID))
+     call nc_check(nf90_put_att(ncFileID, index_of_process_dcnvVarID, "long_name", "index of deep convection process in second dimension of array cumulative change index"))
+     call nc_check(nf90_put_att(ncFileID, index_of_process_dcnvVarID, "units",     "index"))
+
+     ! Define the fhour field
+     call nc_check(nf90_def_var(ncid=ncFileID, name="fhour", xtype=nf90_double, &
+                   varid=fhourVarID))
+     call nc_check(nf90_put_att(ncFileID, fhourVarID, "long_name", "current forecast time"))
+     call nc_check(nf90_put_att(ncFileID, fhourVarID, "units",     "h"))
 
      ! Define the fh_dfi_radar field
-     call nc_check(nf90_def_var(ncid=ncFileID,name="fh_dfi_radar", xtype=nf90_double, &
+     call nc_check(nf90_def_var(ncid=ncFileID, name="fh_dfi_radar", xtype=nf90_double, &
                    dimids=(/num_dfi_radar_p1DimID/), varid=fh_dfi_radarVarID))
-     call nc_check(nf90_put_att(ncFileID, fh_dfi_radarVarID, "long_name", "fh_dfi_radar"))
-     call nc_check(nf90_put_att(ncFileID, fh_dfi_radarVarID, "units",     "Nondimensional"))
- 
+     call nc_check(nf90_put_att(ncFileID, fh_dfi_radarVarID, "long_name", "forecast lead times bounding radar derived temperature or convection suppression intervals"))
+     call nc_check(nf90_put_att(ncFileID, fh_dfi_radarVarID, "units",     "h"))
+
      ! Define the ix_dfi_radar field
-     call nc_check(nf90_def_var(ncid=ncFileID,name="ix_dfi_radar", xtype=nf90_double, &
+     call nc_check(nf90_def_var(ncid=ncFileID, name="ix_dfi_radar", xtype=nf90_int, &
                    dimids=(/num_dfi_radarDimID/), varid=ix_dfi_radarVarID))
-     call nc_check(nf90_put_att(ncFileID, ix_dfi_radarVarID, "long_name", "ix_dfi_radar"))
-     call nc_check(nf90_put_att(ncFileID, ix_dfi_radarVarID, "units",     "Nondimensional"))
- 
+     call nc_check(nf90_put_att(ncFileID, ix_dfi_radarVarID, "long_name", "indices with radar derived temperature or convection suppression data"))
+     call nc_check(nf90_put_att(ncFileID, ix_dfi_radarVarID, "units",     "index"))
+
+     ! Define the num_dfi_radar field
+     call nc_check(nf90_def_var(ncid=ncFileID, name="num_dfi_radar", xtype=nf90_int, &
+                   varid=num_dfi_radarVarID))
+     call nc_check(nf90_put_att(ncFileID, num_dfi_radarVarID, "long_name", "number of time ranges with radar-derived microphysics temperature tendencies or radar-derived convection suppression"))
+     call nc_check(nf90_put_att(ncFileID, num_dfi_radarVarID, "units",     "count"))
+
      ! Define the cap_suppress field
      if (present(cap_suppress)) then
-        call nc_check(nf90_def_var(ncid=ncFileID,name="cap_suppress", xtype=nf90_double, &
+        call nc_check(nf90_def_var(ncid=ncFileID, name="cap_suppress", xtype=nf90_double, &
                       dimids=(/imDimID, num_dfi_radarDimID/), varid=cap_suppressVarID))
-        call nc_check(nf90_put_att(ncFileID, cap_suppressVarID, "long_name", "cap_suppress"))
-        call nc_check(nf90_put_att(ncFileID, cap_suppressVarID, "units",     "Nondimensional"))
+        call nc_check(nf90_put_att(ncFileID, cap_suppressVarID, "long_name", "radar-derived convection suppression"))
+        call nc_check(nf90_put_att(ncFileID, cap_suppressVarID, "units",     "unitless"))
      end if
 
-     ! Define dfi_radar_max_intervals global
-     call nc_check(nf90_put_att(ncFileID, NF90_GLOBAL, "dfi_radar_max_intervals", dfi_radar_max_intervals))
+     ! Define dfi_radar_max_intervals variable
+     call nc_check(nf90_def_var(ncid=ncFileID, name="dfi_radar_max_intervals", xtype=nf90_int, &
+                   varid=dfi_radar_max_intervalsVarID))
+     call nc_check(nf90_put_att(ncFileID, dfi_radar_max_intervalsVarID, "long_name", "maximum allowed number of time ranges with radar-derived microphysics temperature tendencies or radar-derived convection suppression"))
+     call nc_check(nf90_put_att(ncFileID, dfi_radar_max_intervalsVarID, "units",     "count"))
 
-     ! Define ldiag3d global
-     if (ldiag3d) then
-        call nc_check(nf90_put_att(ncFileID, NF90_GLOBAL, "ldiag3d", 1))
-     else
-        call nc_check(nf90_put_att(ncFileID, NF90_GLOBAL, "ldiag3d", 0))
-     end if
-    
+     ! Define ldiag3d variable
+     call nc_check(nf90_def_var(ncid=ncFileID, name="ldiag3d", xtype=nf90_int, &
+                   varid=ldiag3dVarID))
+     call nc_check(nf90_put_att(ncFileID, ldiag3dVarID, "long_name", "flag for 3d diagnostic fields"))
+     call nc_check(nf90_put_att(ncFileID, ldiag3dVarID, "units",     "flag"))
+
      ! Define the qci_conv field
-     call nc_check(nf90_def_var(ncid=ncFileID,name="qci_conv", xtype=nf90_double, &
-                   dimids=(/imDimID, kmDimID/), varid=qci_convVarID))
-     call nc_check(nf90_put_att(ncFileID, qci_convVarID, "long_name", "qci_conv"))
-     call nc_check(nf90_put_att(ncFileID, qci_convVarID, "units",     "Nondimensional"))
- 
-     ! Define do_cap_suppress global
-     if (do_cap_suppress) then
-        call nc_check(nf90_put_att(ncFileID, NF90_GLOBAL, "do_cap_suppress", 1))
-     else
-        call nc_check(nf90_put_att(ncFileID, NF90_GLOBAL, "do_cap_suppress", 0))
+     if (present(qci_conv)) then
+        call nc_check(nf90_def_var(ncid=ncFileID, name="qci_conv", xtype=nf90_double, &
+                      dimids=(/imDimID, kmDimID/), varid=qci_convVarID))
+        call nc_check(nf90_put_att(ncFileID, qci_convVarID, "long_name", "convective cloud condesate after rainout"))
+        call nc_check(nf90_put_att(ncFileID, qci_convVarID, "units",     "kg kg-1"))
      end if
+
+     ! Define do_cap_suppress variable
+     call nc_check(nf90_def_var(ncid=ncFileID, name="do_cap_suppress", xtype=nf90_int, &
+                   varid=do_cap_suppressVarID))
+     call nc_check(nf90_put_att(ncFileID, do_cap_suppressVarID, "long_name", "flag for radar-derived convection suppression"))
+     call nc_check(nf90_put_att(ncFileID, do_cap_suppressVarID, "units",     "flag"))
 
      ! Define the maxupmf field
-     call nc_check(nf90_def_var(ncid=ncFileID,name="maxupmf", xtype=nf90_double, &
-                   dimids=(/imDimID/), varid=maxupmfVarID))
-     call nc_check(nf90_put_att(ncFileID, maxupmfVarID, "long_name", "maxupmf"))
-     call nc_check(nf90_put_att(ncFileID, maxupmfVarID, "units",     "Nondimensional"))
-
-     ! Define the maxMF field
-     call nc_check(nf90_def_var(ncid=ncFileID,name="maxMF", xtype=nf90_double, &
-                   dimids=(/imDimID/), varid=maxMFVarID))
-     call nc_check(nf90_put_att(ncFileID, maxMFVarID, "long_name", "maxMF"))
-     call nc_check(nf90_put_att(ncFileID, maxMFVarID, "units",     "Nondimensional"))
-     
-     ! Define do_mynnedmf global
-     if (do_mynnedmf) then
-        call nc_check(nf90_put_att(ncFileID, NF90_GLOBAL, "do_mynnedmf", 1))
-     else
-        call nc_check(nf90_put_att(ncFileID, NF90_GLOBAL, "do_mynnedmf", 0))
+     if (present(maxupmf)) then
+        call nc_check(nf90_def_var(ncid=ncFileID, name="maxupmf", xtype=nf90_double, &
+                      dimids=(/imDimID/), varid=maxupmfVarID))
+        call nc_check(nf90_put_att(ncFileID, maxupmfVarID, "long_name", "maximum convective updraft mass flux within a column"))
+        call nc_check(nf90_put_att(ncFileID, maxupmfVarID, "units",     "m s-1"))
      end if
 
-     ! Define ichoice_in global
-     call nc_check(nf90_put_att(ncFileID, NF90_GLOBAL, "ichoice_in", ichoice_in))
+     ! Define the maxMF field
+     if (present(maxMF)) then
+        call nc_check(nf90_def_var(ncid=ncFileID, name="maxMF", xtype=nf90_double, &
+                      dimids=(/imDimID/), varid=maxMFVarID))
+        call nc_check(nf90_put_att(ncFileID, maxMFVarID, "long_name", "maximum mass flux within a column"))
+        call nc_check(nf90_put_att(ncFileID, maxMFVarID, "units",     "m s-1"))
+     end if
 
-     ! Define ichoicem_in global
-     call nc_check(nf90_put_att(ncFileID, NF90_GLOBAL, "ichoicem_in", ichoicem_in))
+     ! Define do_mynnedmf variable
+     call nc_check(nf90_def_var(ncid=ncFileID, name="do_mynnedmf", xtype=nf90_int, &
+                   varid=do_mynnedmfVarID))
+     call nc_check(nf90_put_att(ncFileID, do_mynnedmfVarID, "long_name","flag to activate MYNN-EDMF"))
+     call nc_check(nf90_put_att(ncFileID, do_mynnedmfVarID, "units",     "flag"))
 
-     ! Define ichoice_s_in global
-     call nc_check(nf90_put_att(ncFileID, NF90_GLOBAL, "ichoice_s_in", ichoice_s_in))
+     ! Define ichoice_in variable
+     call nc_check(nf90_def_var(ncid=ncFileID, name="ichoice_in", xtype=nf90_int, &
+                   varid=ichoice_inVarID))
+     call nc_check(nf90_put_att(ncFileID, ichoice_inVarID, "long_name", "flag for C3 or GF deep convection closure"))
+     call nc_check(nf90_put_att(ncFileID, ichoice_inVarID, "units",     "flag"))
 
-     ! Define spp_cu_deep global
-     call nc_check(nf90_put_att(ncFileID, NF90_GLOBAL, "spp_cu_deep", spp_cu_deep))
+     ! Define ichoicem_in variable
+     call nc_check(nf90_def_var(ncid=ncFileID, name="ichoicem_in", xtype=nf90_int, &
+                   varid=ichoicem_inVarID))
+     call nc_check(nf90_put_att(ncFileID, ichoicem_inVarID, "long_name", "flag for C3 or GF mid convection closure"))
+     call nc_check(nf90_put_att(ncFileID, ichoicem_inVarID, "units",     "flag"))
+
+     ! Define ichoice_s_in variable
+     call nc_check(nf90_def_var(ncid=ncFileID, name="ichoice_s_in", xtype=nf90_int, &
+                   varid=ichoice_s_inVarID))
+     call nc_check(nf90_put_att(ncFileID, ichoice_s_inVarID, "long_name", "flag for C3 or GF shallow convection closure"))
+     call nc_check(nf90_put_att(ncFileID, ichoice_s_inVarID, "units",     "flag"))
+
+     ! Define spp_cu_deep variable
+     call nc_check(nf90_def_var(ncid=ncFileID, name="spp_cu_deep", xtype=nf90_int, &
+                   varid=spp_cu_deepVarID))
+     call nc_check(nf90_put_att(ncFileID, spp_cu_deepVarID, "long_name", "control for deep convection spp perturbations"))
+     call nc_check(nf90_put_att(ncFileID, spp_cu_deepVarID, "units",     "count"))
 
      ! Define the spp_wts_cu_deep field
      if (present(spp_wts_cu_deep)) then
-        call nc_check(nf90_def_var(ncid=ncFileID,name="spp_wts_cu_deep", xtype=nf90_double, &
-                      dimids=(/imDimID, 1/), varid=spp_wts_cu_deepVarID))
-        call nc_check(nf90_put_att(ncFileID, spp_wts_cu_deepVarID, "long_name", "spp_wts_cu_deep"))
-        call nc_check(nf90_put_att(ncFileID, spp_wts_cu_deepVarID, "units",     "Nondimensional"))
+        call nc_check(nf90_def_var(ncid=ncFileID, name="spp_wts_cu_deep", xtype=nf90_double, &
+                      dimids=(/imDimID, kmDimID/), varid=spp_wts_cu_deepVarID))
+        call nc_check(nf90_put_att(ncFileID, spp_wts_cu_deepVarID, "long_name", "spp weights for cu deep scheme"))
+        call nc_check(nf90_put_att(ncFileID, spp_wts_cu_deepVarID, "units",     "1"))
      end if
-     
+
      ! Define the chem3d field
      if (present(chem3d)) then
-        call nc_check(nf90_def_var(ncid=ncFileID,name="chem3d", xtype=nf90_double, &
-                      dimids=(/imDimID, km_m1DimID, nchemDimID/), varid=chem3dVarID))
-        call nc_check(nf90_put_att(ncFileID, chem3dVarID, "long_name", "chem3d"))
-        call nc_check(nf90_put_att(ncFileID, chem3dVarID, "units",     "Nondimensional"))
+        call nc_check(nf90_def_var(ncid=ncFileID, name="chem3d", xtype=nf90_double, &
+                      dimids=(/imDimID, kmDimID, nchemDimID/), varid=chem3dVarID))
+        call nc_check(nf90_put_att(ncFileID, chem3dVarID, "long_name", "mynn pbl transport of smoke and dust"))
+        call nc_check(nf90_put_att(ncFileID, chem3dVarID, "units",     "various"))
      end if
-     
+
      ! Define the fscav field
-     call nc_check(nf90_def_var(ncid=ncFileID,name="fscav", xtype=nf90_double, &
-                   dimids=(/nchemDimID/), varid=fscavVarID))
-     call nc_check(nf90_put_att(ncFileID, fscavVarID, "long_name", "fscav"))
-     call nc_check(nf90_put_att(ncFileID, fscavVarID, "units",     "Nondimensional"))
+     call nc_check(nf90_def_var(ncid=ncFileID, name="fscav", xtype=nf90_double, &
+                   dimids=(/fscavDimID/), varid=fscavVarID))
+     call nc_check(nf90_put_att(ncFileID, fscavVarID, "long_name", "smoke dust convetive wet scavanging coefficents"))
+     call nc_check(nf90_put_att(ncFileID, fscavVarID, "units",     "none"))
 
      ! Define the wetdpc_deep field
      if (present(wetdpc_deep)) then
-        call nc_check(nf90_def_var(ncid=ncFileID,name="wetdpc_deep", xtype=nf90_double, &
+        call nc_check(nf90_def_var(ncid=ncFileID, name="wetdpc_deep", xtype=nf90_double, &
                       dimids=(/imDimID, nchemDimID/), varid=wetdpc_deepVarID))
-        call nc_check(nf90_put_att(ncFileID, wetdpc_deepVarID, "long_name", "wetdpc_deep"))
-        call nc_check(nf90_put_att(ncFileID, wetdpc_deepVarID, "units",     "Nondimensional"))
+        call nc_check(nf90_put_att(ncFileID, wetdpc_deepVarID, "long_name", "convective wet removal of smoke and dust"))
+        call nc_check(nf90_put_att(ncFileID, wetdpc_deepVarID, "units",     "kg kg-1"))
      end if
 
-     ! Define do_smoke_transport global
-     if (do_smoke_transport) then
-        call nc_check(nf90_put_att(ncFileID, NF90_GLOBAL, "do_smoke_transport", 1))
-     else
-        call nc_check(nf90_put_att(ncFileID, NF90_GLOBAL, "do_smoke_transport", 0))
-     end if        
+     ! Define do_smoke_transport variable
+     call nc_check(nf90_def_var(ncid=ncFileID, name="do_smoke_transport", xtype=nf90_int, &
+                   varid=do_smoke_transportVarID))
+     call nc_check(nf90_put_att(ncFileID, do_smoke_transportVarID, "long_name", "flag for rrfs smoke convective transport"))
+     call nc_check(nf90_put_att(ncFileID, do_smoke_transportVarID, "units",     "flag"))
 
-     ! Define kdt global
+     ! Define kdt variable
+     call nc_check(nf90_def_var(ncid=ncFileID, name="kdt", xtype=nf90_int, &
+                   varid=kdtVarID))
+     call nc_check(nf90_put_att(ncFileID, kdtVarID, "long_name", "current forecast iteration"))
+     call nc_check(nf90_put_att(ncFileID, kdtVarID, "units",     "index"))
      call nc_check(nf90_put_att(ncFileID, NF90_GLOBAL, "kdt", kdt))
 
      ! Leave define mode so we can fill
      call nc_check(nf90_enddef(ncfileID))
- 
+
+     ! Fill the ntracer variable
+     call nc_check(nf90_put_var(ncFileID, ntracerVarID, ntracer))
+
      ! Fill the garea variable
      call nc_check(nf90_put_var(ncFileID, gareaVarID, garea))
- 
+
+     ! Fill the dt variable
+     call nc_check(nf90_put_var(ncFileID, dtVarID, dt))
+
+     ! Fill the flag_init variable
+     if (flag_init) then
+        call nc_check(nf90_put_var(ncFileID, flag_initVarID, 1))
+     else
+        call nc_check(nf90_put_var(ncFileID, flag_initVarID, 0))
+     end if
+
+     ! Fill the flag_restart variable
+     if (flag_restart) then
+        call nc_check(nf90_put_var(ncFileID, flag_restartVarID, 1))
+     else
+        call nc_check(nf90_put_var(ncFileID, flag_restartVarID, 0))
+     end if
+
      ! Fill the cactiv variable
-     call nc_check(nf90_put_var(ncFileID, cactivVarID, cactiv))
- 
+     if (present(cactiv)) then
+        call nc_check(nf90_put_var(ncFileID, cactivVarID, cactiv))
+     end if
+
      ! Fill the cactiv_m variable
-     call nc_check(nf90_put_var(ncFileID, cactiv_mVarID, cactiv_m))
- 
+     if (present(cactiv_m)) then
+        call nc_check(nf90_put_var(ncFileID, cactiv_mVarID, cactiv_m))
+     end if
+
+     ! Fill the g variable
+     call nc_check(nf90_put_var(ncFileID, gVarID, g))
+
+     ! Fill the cp variable
+     call nc_check(nf90_put_var(ncFileID, cpVarID, cp))
+
+     ! Fill the xlv variable
+     call nc_check(nf90_put_var(ncFileID, xlvVarID, xlv))
+
+     ! Fill the r_v variable
+     call nc_check(nf90_put_var(ncFileID, r_vVarID, r_v))
+
      ! Fill the forcet variable
-     call nc_check(nf90_put_var(ncFileID, forcetVarID, forcet))
- 
+     if (present(forcet)) then
+        call nc_check(nf90_put_var(ncFileID, forcetVarID, forcet))
+     end if
+
      ! Fill the forceqv_spechum variable
-     call nc_check(nf90_put_var(ncFileID, forceqv_spechumVarID, forceqv_spechum))
- 
+     if (present(forceqv_spechum)) then
+        call nc_check(nf90_put_var(ncFileID, forceqv_spechumVarID, forceqv_spechum))
+     end if
+
      ! Fill the phil variable
      call nc_check(nf90_put_var(ncFileID, philVarID, phil))
- 
+
      ! Fill the raincv variable
      call nc_check(nf90_put_var(ncFileID, raincvVarID, raincv))
- 
+
      ! Fill the qv_spechum variable
      call nc_check(nf90_put_var(ncFileID, qv_spechumVarID, qv_spechum))
- 
+
      ! Fill the t variable
      call nc_check(nf90_put_var(ncFileID, tVarID, t))
- 
+
      ! Fill the cld1d variable
      call nc_check(nf90_put_var(ncFileID, cld1dVarID, cld1d))
- 
+
      ! Fill the us variable
      call nc_check(nf90_put_var(ncFileID, usVarID, us))
- 
+
      ! Fill the vs variable
      call nc_check(nf90_put_var(ncFileID, vsVarID, vs))
- 
+
      ! Fill the t2di variable
      call nc_check(nf90_put_var(ncFileID, t2diVarID, t2di))
- 
+
      ! Fill the w variable
      call nc_check(nf90_put_var(ncFileID, wVarID, w))
- 
+
      ! Fill the qv2di_spechum variable
      call nc_check(nf90_put_var(ncFileID, qv2di_spechumVarID, qv2di_spechum))
- 
+
      ! Fill the p2di variable
      call nc_check(nf90_put_var(ncFileID, p2diVarID, p2di))
- 
+
      ! Fill the psuri variable
      call nc_check(nf90_put_var(ncFileID, psuriVarID, psuri))
- 
+
      ! Fill the hbot variable
      call nc_check(nf90_put_var(ncFileID, hbotVarID, hbot))
- 
+
      ! Fill the htop variable
      call nc_check(nf90_put_var(ncFileID, htopVarID, htop))
- 
+
      ! Fill the kcnv variable
      call nc_check(nf90_put_var(ncFileID, kcnvVarID, kcnv))
- 
+
      ! Fill the xland variable
      call nc_check(nf90_put_var(ncFileID, xlandVarID, xland))
- 
+
      ! Fill the hfx2 variable
      call nc_check(nf90_put_var(ncFileID, hfx2VarID, hfx2))
- 
+
      ! Fill the qfx2 variable
      call nc_check(nf90_put_var(ncFileID, qfx2VarID, qfx2))
- 
+
      ! Fill the aod_gf variable
-     call nc_check(nf90_put_var(ncFileID, aod_gfVarID, aod_gf))
- 
+     if (present(aod_gf)) then
+        call nc_check(nf90_put_var(ncFileID, aod_gfVarID, aod_gf))
+     end if
+
      ! Fill the cliw variable
      call nc_check(nf90_put_var(ncFileID, cliwVarID, cliw))
- 
+
      ! Fill the clcw variable
      call nc_check(nf90_put_var(ncFileID, clcwVarID, clcw))
- 
+
      ! Fill the pbl variable
      call nc_check(nf90_put_var(ncFileID, pblVarID, pbl))
- 
+
      ! Fill the ud_mf variable
-     call nc_check(nf90_put_var(ncFileID, ud_mfVarID, ud_mf))
- 
+     if (present(ud_mf)) then
+        call nc_check(nf90_put_var(ncFileID, ud_mfVarID, ud_mf))
+     end if
+
      ! Fill the dd_mf variable
      call nc_check(nf90_put_var(ncFileID, dd_mfVarID, dd_mf))
- 
+
      ! Fill the dt_mf variable
      call nc_check(nf90_put_var(ncFileID, dt_mfVarID, dt_mf))
- 
+
      ! Fill the cnvw_moist variable
      call nc_check(nf90_put_var(ncFileID, cnvw_moistVarID, cnvw_moist))
- 
+
      ! Fill the cnvc variable
      call nc_check(nf90_put_var(ncFileID, cnvcVarID, cnvc))
- 
+
+     ! Fill the imfshalcnv variable
+     call nc_check(nf90_put_var(ncFileID, imfshalcnvVarID, imfshalcnv))
+
+     ! Fill the flag_for_scnv_generic_tend variable
+     if (flag_for_scnv_generic_tend) then
+        call nc_check(nf90_put_var(ncFileID, flag_for_scnv_generic_tendVarID, 1))
+     else
+        call nc_check(nf90_put_var(ncFileID, flag_for_scnv_generic_tendVarID, 0))
+     end if
+
+     ! Fill the flag_for_dcnv_generic_tend variable
+     if (flag_for_dcnv_generic_tend) then
+        call nc_check(nf90_put_var(ncFileID, flag_for_dcnv_generic_tendVarID, 1))
+     else
+        call nc_check(nf90_put_var(ncFileID, flag_for_dcnv_generic_tendVarID, 0))
+     end if
+
      ! Fill the dtend variable
-     call nc_check(nf90_put_var(ncFileID, dtendVarID, dtend))
- 
+     if (present(dtend)) then
+        call nc_check(nf90_put_var(ncFileID, dtendVarID, dtend))
+     end if
+
      ! Fill the dtidx variable
      call nc_check(nf90_put_var(ncFileID, dtidxVarID, dtidx))
- 
-     ! Fill the qci_conv variable
-     call nc_check(nf90_put_var(ncFileID, qci_convVarID, qci_conv))
- 
-     ! Fill the ix_dfi_radar variable
-     call nc_check(nf90_put_var(ncFileID, ix_dfi_radarVarID, ix_dfi_radar))
- 
+
+     ! Fill the ntqv variable
+     call nc_check(nf90_put_var(ncFileID, ntqvVarID, ntqv))
+
+     ! Fill the ntiw variable
+     call nc_check(nf90_put_var(ncFileID, ntiwVarID, ntiw))
+
+     ! Fill the ntcw variable
+     call nc_check(nf90_put_var(ncFileID, ntcwVarID, ntcw))
+
+     ! Fill the index_of_temperature variable
+     call nc_check(nf90_put_var(ncFileID, index_of_temperatureVarID, index_of_temperature))
+
+     ! Fill the index_of_x_wind variable
+     call nc_check(nf90_put_var(ncFileID, index_of_x_windVarID, index_of_x_wind))
+
+     ! Fill the index_of_y_wind variable
+     call nc_check(nf90_put_var(ncFileID, index_of_y_windVarID, index_of_y_wind))
+
+     ! Fill the index_of_process_scnv variable
+     call nc_check(nf90_put_var(ncFileID, index_of_process_scnvVarID, index_of_process_scnv))
+
+     ! Fill the index_of_process_dcnv variable
+     call nc_check(nf90_put_var(ncFileID, index_of_process_dcnvVarID, index_of_process_dcnv))
+
+     ! Fill the fhour variable
+     call nc_check(nf90_put_var(ncFileID, fhourVarID, fhour))
+
      ! Fill the fh_dfi_radar variable
      call nc_check(nf90_put_var(ncFileID, fh_dfi_radarVarID, fh_dfi_radar))
- 
+
+     ! Fill the ix_dfi_radar variable
+     call nc_check(nf90_put_var(ncFileID, ix_dfi_radarVarID, ix_dfi_radar))
+
+     ! Fill the num_dfi_radar variable
+     call nc_check(nf90_put_var(ncFileID, num_dfi_radarVarID, num_dfi_radar))
+
      ! Fill the cap_suppress variable
      if (present(cap_suppress)) then
        call nc_check(nf90_put_var(ncFileID, cap_suppressVarID, cap_suppress))
      end if
 
+     ! Fill the dfi_radar_max_intervals variable
+     call nc_check(nf90_put_var(ncFileID, dfi_radar_max_intervalsVarID, dfi_radar_max_intervals))
+
+     ! Fill the ldiag3d variable
+     if (ldiag3d) then
+        call nc_check(nf90_put_var(ncFileID, ldiag3dVarID, 1))
+     else
+        call nc_check(nf90_put_var(ncFileID, ldiag3dVarID, 0))
+     end if
+
+     ! Fill the qci_conv variable
+     if (present(qci_conv)) then
+        call nc_check(nf90_put_var(ncFileID, qci_convVarID, qci_conv))
+     end if
+
+     ! Fill the do_cap_suppress variable
+     if (do_cap_suppress) then
+        call nc_check(nf90_put_var(ncFileID, do_cap_suppressVarID, 1))
+     else
+        call nc_check(nf90_put_var(ncFileID, do_cap_suppressVarID, 0))
+     end if
+
      ! Fill the maxupmf variable
-     call nc_check(nf90_put_var(ncFileID, maxupmfVarID, maxupmf))
+     if (present(maxupmf)) then
+        call nc_check(nf90_put_var(ncFileID, maxupmfVarID, maxupmf))
+     end if
 
      ! Fill the maxMF variable
-     call nc_check(nf90_put_var(ncFileID, maxMFVarID, maxMF))
+     if (present(maxMF)) then
+        call nc_check(nf90_put_var(ncFileID, maxMFVarID, maxMF))
+     end if
+
+     ! Fill the do_mynnedmf variable
+     if (do_mynnedmf) then
+        call nc_check(nf90_put_var(ncFileID, do_mynnedmfVarID, 1))
+     else
+        call nc_check(nf90_put_var(ncFileID, do_mynnedmfVarID, 0))
+     end if
+
+     ! Fill the ichoice_in variable
+     call nc_check(nf90_put_var(ncFileID, ichoice_inVarID, ichoice_in))
+
+     ! Fill the ichoicem_in variable
+     call nc_check(nf90_put_var(ncFileID, ichoicem_inVarID, ichoicem_in))
+
+     ! Fill the ichoice_s_in variable
+     call nc_check(nf90_put_var(ncFileID, ichoice_s_inVarID, ichoice_s_in))
+
+     ! Fill the spp_cu_deep variable
+     call nc_check(nf90_put_var(ncFileID, spp_cu_deepVarID, spp_cu_deep))
 
      ! Fill the spp_wts_cu_deepVarID variable
      if (present(spp_wts_cu_deep)) then
         call nc_check(nf90_put_var(ncFileID, spp_wts_cu_deepVarID, spp_wts_cu_deep))
      end if
 
-     ! Fill the chem3dVarID variable
+     ! Fill the chem3d variable
      if (present(chem3d)) then
         call nc_check(nf90_put_var(ncFileID, chem3dVarID, chem3d))
      end if
@@ -754,6 +1229,16 @@ contains
      if (present(wetdpc_deep)) then
         call nc_check(nf90_put_var(ncFileID, wetdpc_deepVarID, wetdpc_deep))
      end if
+
+     ! Fill the do_smoke_transport variable
+     if (do_smoke_transport) then
+        call nc_check(nf90_put_var(ncFileID, do_smoke_transportVarID, 1))
+     else
+        call nc_check(nf90_put_var(ncFileID, do_smoke_transportVarID, 0))
+     end if
+
+     ! Fill the kdtVarID variable
+     call nc_check(nf90_put_var(ncFileID, kdtVarID, kdt))
 
      ! Flush buffers
      call nc_check(nf90_sync(ncFileID))
@@ -1063,7 +1548,7 @@ contains
    !------------------------------------------------------------------
    subroutine nc_check(istatus)
  
-     integer, intent (IN) :: istatus
+     integer, intent (in) :: istatus
  
      character(len=512) :: error_msg
  

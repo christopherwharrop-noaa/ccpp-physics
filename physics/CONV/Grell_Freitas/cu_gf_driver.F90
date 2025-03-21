@@ -270,6 +270,8 @@ contains
      call cu_gf_io_write_state(trim(state_input_file),        &
          ntracer,                 &
          garea,                   &
+         im,                      &
+         km,                      &
          dt,                      &
          flag_init,               &
          flag_restart,            &
@@ -324,6 +326,7 @@ contains
          fhour,                   &
          fh_dfi_radar,            &
          ix_dfi_radar,            &
+         num_dfi_radar,           &
          cap_suppress,            &
          dfi_radar_max_intervals, &
          ldiag3d,                 &
@@ -1261,6 +1264,8 @@ contains
      call cu_gf_io_write_state(trim(state_output_file),        &
          ntracer,                 &
          garea,                   &
+         im,                      &
+         km,                      &
          dt,                      &
          flag_init,               &
          flag_restart,            &
@@ -1315,6 +1320,7 @@ contains
          fhour,                   &
          fh_dfi_radar,            &
          ix_dfi_radar,            &
+         num_dfi_radar,           &
          cap_suppress,            &
          dfi_radar_max_intervals, &
          ldiag3d,                 &
