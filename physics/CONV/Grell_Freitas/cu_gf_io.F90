@@ -1254,283 +1254,625 @@ contains
    ! reads the kernel state variables from NetCDF
    !------------------------------------------------------------------
    subroutine cu_gf_io_read_state(filename,   &
-        garea,                   &
-        cactiv,                  &
-        cactiv_m,                &
-        forcet,                  &
-        forceqv_spechum,         &
-        phil,                    &
-        raincv,                  &
-        qv_spechum,              &
-        t,                       &
-        cld1d,                   &
-        us,                      &
-        vs,                      &
-        t2di,                    &
-        w,                       &
-        qv2di_spechum,           &
-        p2di,                    &
-        psuri,                   &
-        hbot,                    &
-        htop,                    &
-        kcnv,                    &
-        xland,                   &
-        hfx2,                    &
-        qfx2,                    &
-        aod_gf,                  &
-        cliw,                    &
-        clcw,                    &
-        pbl,                     &
-        ud_mf,                   &
-        dd_mf,                   &
-        dt_mf,                   &
-        cnvw_moist,              &
-        cnvc,                    &
-        dtend,                   &
-        dtidx,                   &
-        fh_dfi_radar,            &
-        ix_dfi_radar,            &
-        cap_suppress,            &
-        qci_conv                 &
-        )
+      ntracer,                    &
+      garea,                      &
+      im,                         &
+      km,                         &
+      dt,                         &
+      flag_init,                  &
+      flag_restart,               &
+      cactiv,                     &
+      cactiv_m,                   &
+      g,                          &
+      cp,                         &
+      xlv,                        &
+      r_v,                        &
+      forcet,                     &
+      forceqv_spechum,            &
+      phil,                       &
+      raincv,                     &
+      qv_spechum,                 &
+      t,                          &
+      cld1d,                      &
+      us,                         &
+      vs,                         &
+      t2di,                       &
+      w,                          &
+      qv2di_spechum,              &
+      p2di,                       &
+      psuri,                      &
+      hbot,                       &
+      htop,                       &
+      kcnv,                       &
+      xland,                      &
+      hfx2,                       &
+      qfx2,                       &
+      aod_gf,                     &
+      cliw,                       &
+      clcw,                       &
+      pbl,                        &
+      ud_mf,                      &
+      dd_mf,                      &
+      dt_mf,                      &
+      cnvw_moist,                 &
+      cnvc,                       &
+      imfshalcnv,                 &
+      flag_for_scnv_generic_tend, &
+      flag_for_dcnv_generic_tend, &
+      dtend,                      &
+      dtidx,                      &
+      ntqv,                       &
+      ntiw,                       &
+      ntcw,                       &
+      index_of_temperature,       &
+      index_of_x_wind,            &
+      index_of_y_wind,            &
+      index_of_process_scnv,      &
+      index_of_process_dcnv,      &
+      fhour,                      &
+      fh_dfi_radar,               &
+      ix_dfi_radar,               &
+      num_dfi_radar,              &
+      cap_suppress,               &
+      dfi_radar_max_intervals,    &
+      ldiag3d,                    &
+      qci_conv,                   &
+      do_cap_suppress,            &
+      maxupmf,                    &
+      maxMF,                      &
+      do_mynnedmf,                &
+      ichoice_in,                 &
+      ichoicem_in,                &
+      ichoice_s_in,               &
+      spp_cu_deep,                &
+      spp_wts_cu_deep,            &
+      nchem,                      &
+      chem3d,                     &
+      fscav,                      &
+      wetdpc_deep,                &
+      do_smoke_transport,         &
+      kdt                         &
+      )
 
      character(len=*), intent(in) :: filename
 
-     real(kind_phys), intent(inout) ::       garea(:)
-     integer, intent(inout) :: cactiv(:), cactiv_m(:)
-     real(kind_phys), intent(inout) :: forcet(:, :)
-     real(kind_phys), intent(inout) :: forceqv_spechum(:, :)
-     real(kind_phys), intent(inout) :: phil(:, :)
-     real(kind_phys), intent(inout) :: raincv(:)
-     real(kind_phys), intent(inout) :: qv_spechum(:, :)
-     real(kind_phys), intent(inout) :: t(:, :)
-     real(kind_phys), intent(inout) :: cld1d(:)
-     real(kind_phys), intent(inout) :: us(:, :)
-     real(kind_phys), intent(inout) :: vs(:, :)
-     real(kind_phys), intent(inout) :: t2di(:, :)
-     real(kind_phys), intent(inout) :: w(:, :)
-     real(kind_phys), intent(inout) :: qv2di_spechum(:, :)
-     real(kind_phys), intent(inout) :: p2di(:, :)
-     real(kind_phys), intent(inout) :: psuri(:)
-     integer, intent(inout) :: hbot(:)
-     integer, intent(inout) :: htop(:)
-     integer, intent(inout) :: kcnv(:)
-     integer, intent(inout) :: xland(:)
-     real(kind_phys), intent(inout) :: hfx2(:)
-     real(kind_phys), intent(inout) :: qfx2(:)
-     real(kind_phys), intent(inout) :: aod_gf(:)
-     real(kind_phys), intent(inout) :: cliw(:, :)
-     real(kind_phys), intent(inout) :: clcw(:, :)
-     real(kind_phys), intent(inout) :: pbl(:)
-     real(kind_phys), intent(inout) :: ud_mf(:, :)
-     real(kind_phys), intent(inout) :: dd_mf(:, :)
-     real(kind_phys), intent(inout) :: dt_mf(:, :)
-     real(kind_phys), intent(inout) :: cnvw_moist(:, :)
-     real(kind_phys), intent(inout) :: cnvc(:, :)
-     real(kind_phys), intent(inout) :: dtend(:, :, :)
-     integer, intent(inout) :: dtidx(:, :)
-     real(kind_phys), intent(inout) :: qci_conv(:, :)
-     integer, intent(inout) :: ix_dfi_radar(:)
-     real(kind_phys), intent(inout) :: fh_dfi_radar(:)
-     real(kind_phys), intent(inout) :: cap_suppress(:, :)
+     integer, intent(inout) :: ntracer
+     real(kind_phys), allocatable, intent(inout) :: garea(:)
+     integer, intent(inout) :: im, km
+     real(kind=kind_phys) :: dt
+     logical :: flag_init, flag_restart
+     integer, allocatable, intent(inout), optional :: cactiv(:), cactiv_m(:)
+     real (kind=kind_phys), intent(inout) :: g, cp, xlv, r_v
+     real(kind_phys), allocatable, intent(inout), optional :: forcet(:, :)
+     real(kind_phys), allocatable, intent(inout), optional :: forceqv_spechum(:, :)
+     real(kind_phys), allocatable, intent(inout) :: phil(:, :)
+     real(kind_phys), allocatable, intent(inout) :: raincv(:)
+     real(kind_phys), allocatable, intent(inout) :: qv_spechum(:, :)
+     real(kind_phys), allocatable, intent(inout) :: t(:, :)
+     real(kind_phys), allocatable, intent(inout) :: cld1d(:)
+     real(kind_phys), allocatable, intent(inout) :: us(:, :)
+     real(kind_phys), allocatable, intent(inout) :: vs(:, :)
+     real(kind_phys), allocatable, intent(inout) :: t2di(:, :)
+     real(kind_phys), allocatable, intent(inout) :: w(:, :)
+     real(kind_phys), allocatable, intent(inout) :: qv2di_spechum(:, :)
+     real(kind_phys), allocatable, intent(inout) :: p2di(:, :)
+     real(kind_phys), allocatable, intent(inout) :: psuri(:)
+     integer, allocatable, intent(inout) :: hbot(:)
+     integer, allocatable, intent(inout) :: htop(:)
+     integer, allocatable, intent(inout) :: kcnv(:)
+     integer, allocatable, intent(inout) :: xland(:)
+     real(kind_phys), allocatable, intent(inout) :: hfx2(:)
+     real(kind_phys), allocatable, intent(inout) :: qfx2(:)
+     real(kind_phys), allocatable, intent(inout), optional :: aod_gf(:)
+     real(kind_phys), allocatable, intent(inout) :: cliw(:, :)
+     real(kind_phys), allocatable, intent(inout) :: clcw(:, :)
+     real(kind_phys), allocatable, intent(inout) :: pbl(:)
+     real(kind_phys), allocatable, intent(inout), optional :: ud_mf(:, :)
+     real(kind_phys), allocatable, intent(inout) :: dd_mf(:, :)
+     real(kind_phys), allocatable, intent(inout) :: dt_mf(:, :)
+     real(kind_phys), allocatable, intent(inout) :: cnvw_moist(:, :)
+     real(kind_phys), allocatable, intent(inout) :: cnvc(:, :)
+     integer, intent(inout) :: imfshalcnv
+     logical, intent(inout) :: flag_for_scnv_generic_tend, flag_for_dcnv_generic_tend
+     real(kind_phys), allocatable, intent(inout), optional :: dtend(:, :, :)
+     integer, allocatable, intent(inout) :: dtidx(:, :)
+     integer, intent(inout) :: ntqv, ntiw, ntcw
+     integer, intent(inout) :: index_of_temperature, index_of_x_wind, index_of_y_wind
+     integer, intent(inout) :: index_of_process_scnv, index_of_process_dcnv
+     real(kind=kind_phys), intent(inout) :: fhour
+     real(kind_phys), allocatable, intent(inout) :: fh_dfi_radar(:)
+     integer, allocatable, intent(inout) :: ix_dfi_radar(:)
+     integer, intent(inout) :: num_dfi_radar
+     real(kind_phys), allocatable, intent(inout), optional :: cap_suppress(:, :)
+     integer, intent(inout) :: dfi_radar_max_intervals
+     logical, intent(inout   ) :: ldiag3d
+     real(kind_phys), allocatable, intent(inout), optional :: qci_conv(:, :)
+     logical, intent(inout) :: do_cap_suppress
+     real(kind=kind_phys), allocatable, intent(inout), optional :: maxupmf(:)
+     real(kind=kind_phys), allocatable, intent(inout), optional :: maxMF(:)
+     logical, intent(inout) :: do_mynnedmf
+     integer, intent(inout) :: ichoice_in, ichoicem_in, ichoice_s_in
+     integer, intent(inout) :: spp_cu_deep
+     real(kind_phys), allocatable, intent(inout), optional :: spp_wts_cu_deep(:, :)
+     integer, intent(inout) :: nchem
+     real(kind_phys), allocatable, intent(inout), optional :: chem3d(:,:,:)
+     real(kind_phys), allocatable, intent(inout) :: fscav(:)
+     real(kind_phys), allocatable, intent(inout), optional :: wetdpc_deep(:,:)
+     logical, intent(inout) :: do_smoke_transport
+     integer, intent(inout) :: kdt
 
      ! General netCDF variables
      integer :: ncFileID
      integer :: nDimensions, nVariables, nAttributes, unlimitedDimID
-     integer :: ixDimID, kmDimID, imDimID
-     integer :: dtend_dimDimID
+     integer :: imDimID, kmDimID
+     integer :: dtend_dim3DimID
+     integer :: ntracers_p100DimID, dtidx_dim2DimID
      integer :: num_dfi_radarDimID, num_dfi_radar_p1DimID
-     integer :: dtidx_dim1DimID, dtidx_dim2DimID
-     integer :: gareaVarID, cactivVarID, cactiv_mVarID
+     integer :: nchemDimID
+     integer :: fscavDimID
+
+     integer :: ntracerVarID, gareaVarID, dtVarID
+     integer :: flag_initVarID, flag_restartVarID
+     integer :: cactivVarID, cactiv_mVarID, gVarID
+     integer :: cpVarID, xlvVarID, r_vVarID
      integer :: forcetVarID, forceqv_spechumVarID, philVarID
      integer :: raincvVarID, qv_spechumVarID, tVarID, cld1dVarID
      integer :: usVarID, vsVarID, t2diVarID, wVarID, qv2di_spechumVarID
      integer :: p2diVarID, psuriVarID, hbotVarID, htopVarID, kcnvVarID
      integer :: xlandVarID, hfx2VarID, qfx2VarID, aod_gfVarID, cliwVarID
      integer :: clcwVarID, pblVarID, ud_mfVarID, dd_mfVarID, dt_mfVarID
-     integer :: cnvw_moistVarID, cnvcVarID, dtendVarID, dtidxVarID
-     integer :: qci_convVarID, ix_dfi_radarVarID, fh_dfi_radarVarID
+     integer :: cnvw_moistVarID, cnvcVarID, imfshalcnvVarID
+     integer :: flag_for_scnv_generic_tendVarID, flag_for_dcnv_generic_tendVarID
+     integer :: dtendVarID, dtidxVarID, ntqvVarID, ntcwVarID, ntiwVarID
+     integer :: index_of_temperatureVarID
+     integer :: index_of_x_windVarID, index_of_y_windVarID
+     integer :: index_of_process_scnvVarID, index_of_process_dcnvVarID
+     integer :: dfi_radar_max_intervalsVarID, ldiag3dVarID
+     integer :: qci_convVarID, fhourVarID, do_cap_suppressVarID
+     integer :: ix_dfi_radarVarID, fh_dfi_radarVarID, num_dfi_radarVarID
      integer :: cap_suppressVarID
+     integer :: maxupmfVarID, maxMFVarID
+     integer :: do_mynnedmfVarID
+     integer :: ichoice_inVarID, ichoicem_inVarID, ichoice_s_inVarID
+     integer :: spp_wts_cu_deepVarID, spp_cu_deepVarID, chem3dVarID
+     integer :: fscavVarID, do_smoke_transportVarID, wetdpc_deepVarID
+     integer :: kdtVarID
 
      ! Local variables
-     integer :: ix, im, km
-     integer :: dtend_dim
-     integer :: num_dfi_radar, num_dfi_radar_p1
-     integer :: dtidx_dim1, dtidx_dim2
+     integer :: dtend_dim3
+     integer :: num_dfi_radar_dim
+     integer :: dtidx_dim2
+     integer :: flag
 
      ! Open file for read only
      call nc_check(nf90_open(trim(filename), NF90_NOWRITE, ncFileID))
      call nc_check(nf90_Inquire(ncFileID, nDimensions, nVariables, nAttributes, unlimitedDimID))
 
      ! Read the model dimensions
-     call nc_check(nf90_inq_dimid(ncFileID, "ix", ixDimID))
-     call nc_check(nf90_inquire_dimension(ncFileID, ixDimID, len=ix))
      call nc_check(nf90_inq_dimid(ncFileID, "im", imDimID))
      call nc_check(nf90_inquire_dimension(ncFileID, imDimID, len=im))
      call nc_check(nf90_inq_dimid(ncFileID, "km", kmDimID))
      call nc_check(nf90_inquire_dimension(ncFileID, kmDimID, len=km))
-     call nc_check(nf90_inq_dimid(ncFileID, "dtend_dim", dtend_dimDimID))
-     call nc_check(nf90_inquire_dimension(ncFileID, dtend_dimDimID, len=dtend_dim))
-     call nc_check(nf90_inq_dimid(ncFileID, "num_dfi_radar", num_dfi_radarDimID))
-     call nc_check(nf90_inquire_dimension(ncFileID, num_dfi_radarDimID, len=num_dfi_radar))
-     call nc_check(nf90_inq_dimid(ncFileID, "num_dfi_radar_p1", num_dfi_radar_p1DimID))
-     call nc_check(nf90_inquire_dimension(ncFileID, num_dfi_radar_p1DimID, len=num_dfi_radar_p1))
-     call nc_check(nf90_inq_dimid(ncFileID, "dtidx_dim1", dtidx_dim1DimID))
-     call nc_check(nf90_inquire_dimension(ncFileID, dtidx_dim1DimID, len=dtidx_dim1))
+     call nc_check(nf90_inq_dimid(ncFileID, "dtend_dim3", dtend_dim3DimID))
+     call nc_check(nf90_inquire_dimension(ncFileID, dtend_dim3DimID, len=dtend_dim3))
      call nc_check(nf90_inq_dimid(ncFileID, "dtidx_dim2", dtidx_dim2DimID))
      call nc_check(nf90_inquire_dimension(ncFileID, dtidx_dim2DimID, len=dtidx_dim2))
+     call nc_check(nf90_inq_dimid(ncFileID, "num_dfi_radar_dim", num_dfi_radarDimID))
+     call nc_check(nf90_inquire_dimension(ncFileID, num_dfi_radarDimID, len=num_dfi_radar_dim))
+     call nc_check(nf90_inq_dimid(ncFileID, "nchem", nchemDimID))
+     call nc_check(nf90_inquire_dimension(ncFileID, nchemDimID, len=nchem))
+
+     ! Get the ntracer variable
+     call nc_check(nf90_inq_varid(ncFileID, "ntracer", ntracerVarID))
+     call nc_check(nf90_get_var(ncFileID, ntracerVarID, ntracer))
 
      ! Get the garea variable
+     allocate(garea(im))
      call nc_check(nf90_inq_varid(ncFileID, "garea", gareaVarID))
      call nc_check(nf90_get_var(ncFileID, gareaVarID, garea))
 
+     ! Get the dt variable
+     call nc_check(nf90_inq_varid(ncFileID, "dt", dtVarID))
+     call nc_check(nf90_get_var(ncFileID, dtVarID, dt))
+
+     ! Get the flag_init variable
+     call nc_check(nf90_inq_varid(ncFileID, "flag_init", flag_initVarID))
+     call nc_check(nf90_get_var(ncFileID, flag_initVarID, flag))
+     if (flag == 0) then
+        flag_init = .False.
+     else
+        flag_init = .True.
+     end if
+
+     ! Get the flag_restart variable
+     call nc_check(nf90_inq_varid(ncFileID, "flag_restart", flag_restartVarID))
+     call nc_check(nf90_get_var(ncFileID, flag_restartVarID, flag))
+     if (flag == 0) then
+        flag_restart = .False.
+     else
+        flag_restart = .True.
+     end if
+
      ! Get the cactiv variable
-     call nc_check(nf90_inq_varid(ncFileID, "cactiv", cactivVarID))
-     call nc_check(nf90_get_var(ncFileID, cactivVarID, cactiv))
+     if (present(cactiv)) then
+        allocate(cactiv(im))
+        call nc_check(nf90_inq_varid(ncFileID, "cactiv", cactivVarID))
+        call nc_check(nf90_get_var(ncFileID, cactivVarID, cactiv))
+     end if
 
      ! Get the cactiv_m variable
-     call nc_check(nf90_inq_varid(ncFileID, "cactiv_m", cactiv_mVarID))
-     call nc_check(nf90_get_var(ncFileID, cactiv_mVarID, cactiv_m))
+     if (present(cactiv_m)) then
+        allocate(cactiv_m(im))
+        call nc_check(nf90_inq_varid(ncFileID, "cactiv_m", cactiv_mVarID))
+        call nc_check(nf90_get_var(ncFileID, cactiv_mVarID, cactiv_m))
+     end if
+
+     ! Get the g variable
+     call nc_check(nf90_inq_varid(ncFileID, "g", gVarID))
+     call nc_check(nf90_get_var(ncFileID, gVarID, g))
+
+     ! Get the cp variable
+     call nc_check(nf90_inq_varid(ncFileID, "cp", cpVarID))
+     call nc_check(nf90_get_var(ncFileID, cpVarID, cp))
+
+     ! Get the xlv variable
+     call nc_check(nf90_inq_varid(ncFileID, "xlv", xlvVarID))
+     call nc_check(nf90_get_var(ncFileID, xlvVarID, xlv))
+
+     ! Get the r_v variable
+     call nc_check(nf90_inq_varid(ncFileID, "r_v", r_vVarID))
+     call nc_check(nf90_get_var(ncFileID, r_vVarID, r_v))
 
      ! Get the forcet variable
-     call nc_check(nf90_inq_varid(ncFileID, "forcet", forcetVarID))
-     call nc_check(nf90_get_var(ncFileID, forcetVarID, forcet))
+     if (present(forcet)) then
+        allocate(forcet(im, km))
+        call nc_check(nf90_inq_varid(ncFileID, "forcet", forcetVarID))
+        call nc_check(nf90_get_var(ncFileID, forcetVarID, forcet))
+     end if
 
      ! Get the forceqv_spechum variable
-     call nc_check(nf90_inq_varid(ncFileID, "forceqv_spechum", forceqv_spechumVarID))
-     call nc_check(nf90_get_var(ncFileID, forceqv_spechumVarID, forceqv_spechum))
+     if (present(forceqv_spechum)) then
+        allocate(forceqv_spechum(im, km))
+        call nc_check(nf90_inq_varid(ncFileID, "forceqv_spechum", forceqv_spechumVarID))
+        call nc_check(nf90_get_var(ncFileID, forceqv_spechumVarID, forceqv_spechum))
+     end if
 
      ! Get the phil variable
+     allocate(phil(im, km))
      call nc_check(nf90_inq_varid(ncFileID, "phil", philVarID))
      call nc_check(nf90_get_var(ncFileID, philVarID, phil))
 
      ! Get the raincv variable
+     allocate(raincv(im))
      call nc_check(nf90_inq_varid(ncFileID, "raincv", raincvVarID))
      call nc_check(nf90_get_var(ncFileID, raincvVarID, raincv))
 
      ! Get the qv_spechum variable
+     allocate(qv_spechum(im, km))
      call nc_check(nf90_inq_varid(ncFileID, "qv_spechum", qv_spechumVarID))
      call nc_check(nf90_get_var(ncFileID, qv_spechumVarID, qv_spechum))
 
      ! Get the t variable
+     allocate(t(im, km))
      call nc_check(nf90_inq_varid(ncFileID, "t", tVarID))
      call nc_check(nf90_get_var(ncFileID, tVarID, t))
 
      ! Get the cld1d variable
+     allocate(cld1d(im))
      call nc_check(nf90_inq_varid(ncFileID, "cld1d", cld1dVarID))
      call nc_check(nf90_get_var(ncFileID, cld1dVarID, cld1d))
 
      ! Get the us variable
+     allocate(us(im, km))
      call nc_check(nf90_inq_varid(ncFileID, "us", usVarID))
      call nc_check(nf90_get_var(ncFileID, usVarID, us))
 
      ! Get the vs variable
+     allocate(vs(im, km))
      call nc_check(nf90_inq_varid(ncFileID, "vs", vsVarID))
      call nc_check(nf90_get_var(ncFileID, vsVarID, vs))
 
      ! Get the t2di variable
+     allocate(t2di(im, km))
      call nc_check(nf90_inq_varid(ncFileID, "t2di", t2diVarID))
      call nc_check(nf90_get_var(ncFileID, t2diVarID, t2di))
 
      ! Get the w variable
+     allocate(w(im, km))
      call nc_check(nf90_inq_varid(ncFileID, "w", wVarID))
      call nc_check(nf90_get_var(ncFileID, wVarID, w))
 
      ! Get the qv2di_spechum variable
+     allocate(qv2di_spechum(im, km))
      call nc_check(nf90_inq_varid(ncFileID, "qv2di_spechum", qv2di_spechumVarID))
      call nc_check(nf90_get_var(ncFileID, qv2di_spechumVarID, qv2di_spechum))
 
      ! Get the p2di variable
+     allocate(p2di(im, km))
      call nc_check(nf90_inq_varid(ncFileID, "p2di", p2diVarID))
      call nc_check(nf90_get_var(ncFileID, p2diVarID, p2di))
 
      ! Get the psuri variable
+     allocate(psuri(im))
      call nc_check(nf90_inq_varid(ncFileID, "psuri", psuriVarID))
      call nc_check(nf90_get_var(ncFileID, psuriVarID, psuri))
 
      ! Get the hbot variable
+     allocate(hbot(im))
      call nc_check(nf90_inq_varid(ncFileID, "hbot", hbotVarID))
      call nc_check(nf90_get_var(ncFileID, hbotVarID, hbot))
 
      ! Get the htop variable
+     allocate(htop(im))
      call nc_check(nf90_inq_varid(ncFileID, "htop", htopVarID))
      call nc_check(nf90_get_var(ncFileID, htopVarID, htop))
 
      ! Get the kcnv variable
+     allocate(kcnv(im))
      call nc_check(nf90_inq_varid(ncFileID, "kcnv", kcnvVarID))
      call nc_check(nf90_get_var(ncFileID, kcnvVarID, kcnv))
 
      ! Get the xland variable
+     allocate(xland(im))
      call nc_check(nf90_inq_varid(ncFileID, "xland", xlandVarID))
      call nc_check(nf90_get_var(ncFileID, xlandVarID, xland))
 
      ! Get the hfx2 variable
+     allocate(hfx2(im))
      call nc_check(nf90_inq_varid(ncFileID, "hfx2", hfx2VarID))
      call nc_check(nf90_get_var(ncFileID, hfx2VarID, hfx2))
 
      ! Get the qfx2 variable
+     allocate(qfx2(im))
      call nc_check(nf90_inq_varid(ncFileID, "qfx2", qfx2VarID))
      call nc_check(nf90_get_var(ncFileID, qfx2VarID, qfx2))
 
      ! Get the aod_gf variable
-     call nc_check(nf90_inq_varid(ncFileID, "aod_gf", aod_gfVarID))
-     call nc_check(nf90_get_var(ncFileID, aod_gfVarID, aod_gf))
+     if (present(aod_gf)) then
+        allocate(aod_gf(im))
+        call nc_check(nf90_inq_varid(ncFileID, "aod_gf", aod_gfVarID))
+        call nc_check(nf90_get_var(ncFileID, aod_gfVarID, aod_gf))
+     end if
 
      ! Get the cliw variable
+     allocate(cliw(im, km))
      call nc_check(nf90_inq_varid(ncFileID, "cliw", cliwVarID))
      call nc_check(nf90_get_var(ncFileID, cliwVarID, cliw))
 
      ! Get the clcw variable
+     allocate(clcw(im, km))
      call nc_check(nf90_inq_varid(ncFileID, "clcw", clcwVarID))
      call nc_check(nf90_get_var(ncFileID, clcwVarID, clcw))
 
      ! Get the pbl variable
+     allocate(pbl(im))
      call nc_check(nf90_inq_varid(ncFileID, "pbl", pblVarID))
      call nc_check(nf90_get_var(ncFileID, pblVarID, pbl))
 
      ! Get the ud_mf variable
-     call nc_check(nf90_inq_varid(ncFileID, "ud_mf", ud_mfVarID))
-     call nc_check(nf90_get_var(ncFileID, ud_mfVarID, ud_mf))
+     if (present(ud_mf)) then
+        allocate(ud_mf(im, km))
+        call nc_check(nf90_inq_varid(ncFileID, "ud_mf", ud_mfVarID))
+        call nc_check(nf90_get_var(ncFileID, ud_mfVarID, ud_mf))
+     end if
 
      ! Get the dd_mf variable
+     allocate(dd_mf(im, km))
      call nc_check(nf90_inq_varid(ncFileID, "dd_mf", dd_mfVarID))
      call nc_check(nf90_get_var(ncFileID, dd_mfVarID, dd_mf))
 
      ! Get the dt_mf variable
+     allocate(dt_mf(im, km))
      call nc_check(nf90_inq_varid(ncFileID, "dt_mf", dt_mfVarID))
      call nc_check(nf90_get_var(ncFileID, dt_mfVarID, dt_mf))
 
      ! Get the cnvw_moist variable
+     allocate(cnvw_moist(im, km))
      call nc_check(nf90_inq_varid(ncFileID, "cnvw_moist", cnvw_moistVarID))
      call nc_check(nf90_get_var(ncFileID, cnvw_moistVarID, cnvw_moist))
 
      ! Get the cnvc variable
+     allocate(cnvc(im, km))
      call nc_check(nf90_inq_varid(ncFileID, "cnvc", cnvcVarID))
      call nc_check(nf90_get_var(ncFileID, cnvcVarID, cnvc))
 
+     ! Get the imfshalcnv variable
+     call nc_check(nf90_inq_varid(ncFileID, "imfshalcnv", imfshalcnvVarID))
+     call nc_check(nf90_get_var(ncFileID, imfshalcnvVarID, imfshalcnv))
+
+     ! Get the flag_for_scnv_generic_tend variable
+     call nc_check(nf90_inq_varid(ncFileID, "flag_for_scnv_generic_tend", flag_for_scnv_generic_tendVarID))
+     call nc_check(nf90_get_var(ncFileID, flag_for_scnv_generic_tendVarID, flag))
+     if (flag == 0) then
+        flag_for_scnv_generic_tend = .False.
+     else
+        flag_for_scnv_generic_tend = .True.
+     end if
+
+     ! Get the flag_for_dcnv_generic_tend variable
+     call nc_check(nf90_inq_varid(ncFileID, "flag_for_dcnv_generic_tend", flag_for_dcnv_generic_tendVarID))
+     call nc_check(nf90_get_var(ncFileID, flag_for_dcnv_generic_tendVarID, flag))
+     if (flag == 0) then
+        flag_for_dcnv_generic_tend = .False.
+     else
+        flag_for_dcnv_generic_tend = .True.
+     end if
+
      ! Get the dtend variable
-     call nc_check(nf90_inq_varid(ncFileID, "dtend", dtendVarID))
-     call nc_check(nf90_get_var(ncFileID, dtendVarID, dtend))
+     if (present(dtend)) then
+        allocate(dtend(im, km, dtend_dim3))
+        call nc_check(nf90_inq_varid(ncFileID, "dtend", dtendVarID))
+        call nc_check(nf90_get_var(ncFileID, dtendVarID, dtend))
+     end if
 
      ! Get the dtidx variable
+     allocate(dtidx(ntracer + 100, dtidx_dim2))
      call nc_check(nf90_inq_varid(ncFileID, "dtidx", dtidxVarID))
      call nc_check(nf90_get_var(ncFileID, dtidxVarID, dtidx))
 
-     ! Get the qci_conv variable
-     call nc_check(nf90_inq_varid(ncFileID, "qci_conv", qci_convVarID))
-     call nc_check(nf90_get_var(ncFileID, qci_convVarID, qci_conv))
+     ! Get the ntqv variable
+     call nc_check(nf90_inq_varid(ncFileID, "ntqv", ntqvVarID))
+     call nc_check(nf90_get_var(ncFileID, ntqvVarID, ntqv))
 
-     ! Get the ix_dfi_radar variable
-     call nc_check(nf90_inq_varid(ncFileID, "ix_dfi_radar", ix_dfi_radarVarID))
-     call nc_check(nf90_get_var(ncFileID, ix_dfi_radarVarID, ix_dfi_radar))
+     ! Get the ntiw variable
+     call nc_check(nf90_inq_varid(ncFileID, "ntiw", ntiwVarID))
+     call nc_check(nf90_get_var(ncFileID, ntiwVarID, ntiw))
+
+     ! Get the ntcw variable
+     call nc_check(nf90_inq_varid(ncFileID, "ntcw", ntcwVarID))
+     call nc_check(nf90_get_var(ncFileID, ntcwVarID, ntcw))
+
+     ! Get the index_of_temperature variable
+     call nc_check(nf90_inq_varid(ncFileID, "index_of_temperature", index_of_temperatureVarID))
+     call nc_check(nf90_get_var(ncFileID, index_of_temperatureVarID, index_of_temperature))
+
+     ! Get the index_of_x_wind variable
+     call nc_check(nf90_inq_varid(ncFileID, "index_of_x_wind", index_of_x_windVarID))
+     call nc_check(nf90_get_var(ncFileID, index_of_x_windVarID, index_of_x_wind))
+
+     ! Get the index_of_y_wind variable
+     call nc_check(nf90_inq_varid(ncFileID, "index_of_y_wind", index_of_y_windVarID))
+     call nc_check(nf90_get_var(ncFileID, index_of_y_windVarID, index_of_y_wind))
+
+     ! Get the index_of_process_scnv variable
+     call nc_check(nf90_inq_varid(ncFileID, "index_of_process_scnv", index_of_process_scnvVarID))
+     call nc_check(nf90_get_var(ncFileID, index_of_process_scnvVarID, index_of_process_scnv))
+
+     ! Get the index_of_process_dcnv variable
+     call nc_check(nf90_inq_varid(ncFileID, "index_of_process_dcnv", index_of_process_dcnvVarID))
+     call nc_check(nf90_get_var(ncFileID, index_of_process_dcnvVarID, index_of_process_dcnv))
+
+     ! Get the fhour variable
+     call nc_check(nf90_inq_varid(ncFileID, "fhour", fhourVarID))
+     call nc_check(nf90_get_var(ncFileID, fhourVarID, fhour))
 
      ! Get the fh_dfi_radar variable
+     allocate(fh_dfi_radar(num_dfi_radar_dim + 1))
      call nc_check(nf90_inq_varid(ncFileID, "fh_dfi_radar", fh_dfi_radarVarID))
      call nc_check(nf90_get_var(ncFileID, fh_dfi_radarVarID, fh_dfi_radar))
 
+     ! Get the ix_dfi_radar variable
+     allocate(ix_dfi_radar(num_dfi_radar_dim))
+     call nc_check(nf90_inq_varid(ncFileID, "ix_dfi_radar", ix_dfi_radarVarID))
+     call nc_check(nf90_get_var(ncFileID, ix_dfi_radarVarID, ix_dfi_radar))
+
+     ! Get the num_dfi_radar variable
+     call nc_check(nf90_inq_varid(ncFileID, "num_dfi_radar", num_dfi_radarVarID))
+     call nc_check(nf90_get_var(ncFileID, num_dfi_radarVarID, num_dfi_radar))
+
      ! Get the cap_suppress variable
-     call nc_check(nf90_inq_varid(ncFileID, "cap_suppress", cap_suppressVarID))
-     call nc_check(nf90_get_var(ncFileID, cap_suppressVarID, cap_suppress))
+     if (present(cap_suppress)) then
+        allocate(cap_suppress(im, num_dfi_radar_dim))
+        call nc_check(nf90_inq_varid(ncFileID, "cap_suppress", cap_suppressVarID))
+        call nc_check(nf90_get_var(ncFileID, cap_suppressVarID, cap_suppress))
+     end if
+
+     ! Get the dfi_radar_max_intervals variable
+     call nc_check(nf90_inq_varid(ncFileID, "dfi_radar_max_intervals", dfi_radar_max_intervalsVarID))
+     call nc_check(nf90_get_var(ncFileID, dfi_radar_max_intervalsVarID, dfi_radar_max_intervals))
+
+     ! Get the ldiag3d variable
+     call nc_check(nf90_inq_varid(ncFileID, "ldiag3d", ldiag3dVarID))
+     call nc_check(nf90_get_var(ncFileID, ldiag3dVarID, flag))
+     if (flag == 0) then
+        ldiag3d = .False.
+     else
+        ldiag3d = .True.
+     end if
+
+     ! Get the qci_conv variable
+     if (present(qci_conv)) then
+        allocate(qci_conv(im, km))
+        call nc_check(nf90_inq_varid(ncFileID, "qci_conv", qci_convVarID))
+        call nc_check(nf90_get_var(ncFileID, qci_convVarID, qci_conv))
+     end if
+
+     ! Get the do_cap_suppress variable
+     call nc_check(nf90_inq_varid(ncFileID, "do_cap_suppress", do_cap_suppressVarID))
+     call nc_check(nf90_get_var(ncFileID, do_cap_suppressVarID, flag))
+     if (flag == 0) then
+        do_cap_suppress = .False.
+     else
+        do_cap_suppress = .True.
+     end if
+
+     ! Get the maxupmf variable
+     if (present(maxupmf)) then
+        allocate(maxupmf(im))
+        call nc_check(nf90_inq_varid(ncFileID, "maxupmf", maxupmfVarID))
+        call nc_check(nf90_get_var(ncFileID, maxupmfVarID, maxupmf))
+     end if
+
+     ! Get the maxMF variable
+     if (present(maxMF)) then
+        allocate(maxMF(im))
+        call nc_check(nf90_inq_varid(ncFileID, "maxMF", maxMFVarID))
+        call nc_check(nf90_get_var(ncFileID, maxMFVarID, maxMF))
+     end if
+
+     ! Get the do_mynnedmf variable
+     call nc_check(nf90_inq_varid(ncFileID, "do_mynnedmf", do_mynnedmfVarID))
+     call nc_check(nf90_get_var(ncFileID, do_mynnedmfVarID, flag))
+     if (flag == 0) then
+        do_mynnedmf = .False.
+     else
+        do_mynnedmf = .True.
+     end if
+
+     ! Get the ichoice_in variable
+     call nc_check(nf90_inq_varid(ncFileID, "ichoice_in", ichoice_inVarID))
+     call nc_check(nf90_get_var(ncFileID, ichoice_inVarID, ichoice_in))
+
+     ! Get the ichoicem_in variable
+     call nc_check(nf90_inq_varid(ncFileID, "ichoicem_in", ichoicem_inVarID))
+     call nc_check(nf90_get_var(ncFileID, ichoicem_inVarID, ichoicem_in))
+
+     ! Get the ichoice_s_in variable
+     call nc_check(nf90_inq_varid(ncFileID, "ichoice_s_in", ichoice_s_inVarID))
+     call nc_check(nf90_get_var(ncFileID, ichoice_s_inVarID, ichoice_s_in))
+
+     ! Get the spp_cu_deep variable
+     call nc_check(nf90_inq_varid(ncFileID, "spp_cu_deep", spp_cu_deepVarID))
+     call nc_check(nf90_get_var(ncFileID, spp_cu_deepVarID, spp_cu_deep))
+
+     ! Get the spp_wts_cu_deep variable
+     if (present(spp_wts_cu_deep)) then
+        allocate(spp_wts_cu_deep(im, km))
+        call nc_check(nf90_inq_varid(ncFileID, "spp_wts_cu_deep", spp_wts_cu_deepVarID))
+        call nc_check(nf90_get_var(ncFileID, spp_wts_cu_deepVarID, spp_wts_cu_deep))
+     end if
+
+     ! Get the chem3d variable
+     if (present(chem3d)) then
+        allocate(chem3d(im, km, nchem))
+        call nc_check(nf90_inq_varid(ncFileID, "chem3d", chem3dVarID))
+        call nc_check(nf90_get_var(ncFileID, chem3dVarID, chem3d))
+     end if
+
+     ! Get the fscav variable
+     allocate(fscav(3))
+     call nc_check(nf90_inq_varid(ncFileID, "fscav", fscavVarID))
+     call nc_check(nf90_get_var(ncFileID, fscavVarID, fscav))
+
+     ! Get the wetdpc_deep variable
+     if (present(wetdpc_deep)) then
+        allocate(wetdpc_deep(im, nchem))
+        call nc_check(nf90_inq_varid(ncFileID, "wetdpc_deep", wetdpc_deepVarID))
+        call nc_check(nf90_get_var(ncFileID, wetdpc_deepVarID, wetdpc_deep))
+     end if
+
+     ! Get the do_smoke_transport variable
+     call nc_check(nf90_inq_varid(ncFileID, "do_smoke_transport", do_smoke_transportVarID))
+     call nc_check(nf90_get_var(ncFileID, do_smoke_transportVarID, flag))
+     if (flag == 0) then
+        do_smoke_transport = .False.
+     else
+        do_smoke_transport = .True.
+     end if
+
+     ! Get the kdt variable
+     call nc_check(nf90_inq_varid(ncFileID, "kdt", kdtVarID))
+     call nc_check(nf90_get_var(ncFileID, kdtVarID, kdt))
 
      ! Flush buffers
      call nc_check(nf90_sync(ncFileID))
