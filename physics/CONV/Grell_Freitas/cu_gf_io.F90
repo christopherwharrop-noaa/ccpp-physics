@@ -459,7 +459,7 @@ contains
      dtidx_dim2 = size(dtidx, dim=2)
 
      ! Open new file, overwriting previous contents
-     call nc_check(nf90_create(trim(filename), IOR(NF90_CLOBBER,NF90_NETCDF4), ncFileID))
+     call nc_check(nf90_create(trim(filename), IOR(NF90_NOCLOBBER,NF90_NETCDF4), ncFileID))
      call nc_check(nf90_Inquire(ncFileID, nDimensions, nVariables, nAttributes, unlimitedDimID))
 
      ! Define the dimensions
@@ -1347,14 +1347,16 @@ contains
      real(kind_phys), allocatable, intent(inout), optional :: forceqv_spechum(:, :)
      real(kind_phys), allocatable, intent(inout) :: phil(:, :)
      real(kind_phys), allocatable, intent(inout) :: raincv(:)
-     real(kind_phys), allocatable, intent(inout) :: qv_spechum(:, :)
-     real(kind_phys), allocatable, intent(inout) :: t(:, :)
+     real(kind_phys), allocatable, target, intent(inout) :: qv_spechum(:, :)
+     real(kind_phys), allocatable, target, intent(inout) :: t(:, :)
      real(kind_phys), allocatable, intent(inout) :: cld1d(:)
      real(kind_phys), allocatable, intent(inout) :: us(:, :)
      real(kind_phys), allocatable, intent(inout) :: vs(:, :)
-     real(kind_phys), allocatable, intent(inout) :: t2di(:, :)
+     ! t2di points to the same memory as t
+     real(kind_phys), pointer, intent(inout) :: t2di(:, :)
      real(kind_phys), allocatable, intent(inout) :: w(:, :)
-     real(kind_phys), allocatable, intent(inout) :: qv2di_spechum(:, :)
+     ! qv2di_spechum points to the same  memory as qv_spechum
+     real(kind_phys), pointer, intent(inout) :: qv2di_spechum(:, :)
      real(kind_phys), allocatable, intent(inout) :: p2di(:, :)
      real(kind_phys), allocatable, intent(inout) :: psuri(:)
      integer, allocatable, intent(inout) :: hbot(:)
@@ -1457,7 +1459,7 @@ contains
      call nc_check(nf90_inquire_dimension(ncFileID, dtend_dim3DimID, len=dtend_dim3))
      call nc_check(nf90_inq_dimid(ncFileID, "dtidx_dim2", dtidx_dim2DimID))
      call nc_check(nf90_inquire_dimension(ncFileID, dtidx_dim2DimID, len=dtidx_dim2))
-     call nc_check(nf90_inq_dimid(ncFileID, "num_dfi_radar_dim", num_dfi_radarDimID))
+     call nc_check(nf90_inq_dimid(ncFileID, "num_dfi_radar", num_dfi_radarDimID))
      call nc_check(nf90_inquire_dimension(ncFileID, num_dfi_radarDimID, len=num_dfi_radar_dim))
      call nc_check(nf90_inq_dimid(ncFileID, "nchem", nchemDimID))
      call nc_check(nf90_inquire_dimension(ncFileID, nchemDimID, len=nchem))
@@ -1573,9 +1575,8 @@ contains
      call nc_check(nf90_get_var(ncFileID, vsVarID, vs))
 
      ! Get the t2di variable
-     allocate(t2di(im, km))
-     call nc_check(nf90_inq_varid(ncFileID, "t2di", t2diVarID))
-     call nc_check(nf90_get_var(ncFileID, t2diVarID, t2di))
+     ! t2di points to the same memory as t
+     t2di => t
 
      ! Get the w variable
      allocate(w(im, km))
@@ -1583,9 +1584,8 @@ contains
      call nc_check(nf90_get_var(ncFileID, wVarID, w))
 
      ! Get the qv2di_spechum variable
-     allocate(qv2di_spechum(im, km))
-     call nc_check(nf90_inq_varid(ncFileID, "qv2di_spechum", qv2di_spechumVarID))
-     call nc_check(nf90_get_var(ncFileID, qv2di_spechumVarID, qv2di_spechum))
+     ! qv2di_spechum points to the same memory as qv_spechum
+     qv2di_spechum => qv_spechum
 
      ! Get the p2di variable
      allocate(p2di(im, km))
