@@ -9,7 +9,7 @@ module cu_gf_driver
    use machine   , only: kind_phys
    use cu_gf_deep, only: cu_gf_deep_run,neg_check,fct1d3
    use cu_gf_sh  , only: cu_gf_sh_run
-   use cu_gf_io  , only: cu_gf_io_write_state
+   use cu_gf_io  , only: cu_gf_io_write_state, cu_gf_io_read_state
 
    implicit none
 
@@ -253,102 +253,98 @@ contains
 !$acc declare create(cap_suppress_j)
    integer :: itime, do_cap_suppress_here
    logical :: exit_func, exist
-   integer, save :: counter = 0
-   character(len=255) :: state_file
+   character(len=255) :: state_input_file, state_output_file
 
   !parameter (tf=243.16, tcr=270.16, tcrf=1.0/(tcr-tf)) ! FV3 original
   !parameter (tf=263.16, tcr=273.16, tcrf=1.0/(tcr-tf))
   !parameter (tf=233.16, tcr=263.16, tcrf=1.0/(tcr-tf))
   parameter (tf=258.16, tcr=273.16, tcrf=1.0/(tcr-tf)) ! as fim, HCB tuning
 
-  counter = counter + 1
-  write(state_file, "(A,I0.4,A)") "input_state_", counter, ".nc"
-  !inquire(file=trim(state_file), exist=exist)
-  !if (.not. exist .and. present(dtend) .and. present(forcet) .and. present(forceqv_spechum) .and. present(qci_conv) .and. present(cap_suppress) .and. present(ud_mf) .and. present(aod_gf) .and. present(cactiv) .and. present(cactiv_m)) then
-  !if (.not. exist) then
-  !  print *, "INFO: Writing state"
+     ! --- Set name of input and output state files
+     write(state_input_file, "(A,I0.4,A)") "input_state_", kdt, ".nc"
+     write(state_output_file, "(A,I0.4,A)") "output_state_", kdt, ".nc"
 
-  !--- Write state
-  call cu_gf_io_write_state(trim(state_file),        &
-      ntracer,                 &
-      garea,                   &
-      dt,                      &
-      flag_init,               &
-      flag_restart,            &
-      cactiv,                  &
-      cactiv_m,                &
-      g,                       &
-      cp,                      &
-      xlv,                     &
-      r_v,                     &
-      forcet,                  &
-      forceqv_spechum,         &
-      phil,                    &
-      raincv,                  &
-      qv_spechum,              &
-      t,                       &
-      cld1d,                   &
-      us,                      &
-      vs,                      &
-      t2di,                    &
-      w,                       &
-      qv2di_spechum,           &
-      p2di,                    &
-      psuri,                   &
-      hbot,                    &
-      htop,                    &
-      kcnv,                    &
-      xland,                   &
-      hfx2,                    &
-      qfx2,                    &
-      aod_gf,                  &
-      cliw,                    &
-      clcw,                    &
-      pbl,                     &
-      ud_mf,                   &
-      dd_mf,                   &
-      dt_mf,                   &
-      cnvw_moist,              &
-      cnvc,                    &
-      imfshalcnv,              &
-      flag_for_scnv_generic_tend, &
-      flag_for_dcnv_generic_tend, &
-      dtend,                   &
-      dtidx,                   &
-      ntqv,                    &
-      ntiw,                    &
-      ntcw,                    &
-      index_of_temperature,    &
-      index_of_x_wind,         &
-      index_of_y_wind,         &
-      index_of_process_scnv,   &
-      index_of_process_dcnv,   &
-      fhour,                   &
-      fh_dfi_radar,            &
-      ix_dfi_radar,            &
-      cap_suppress,            &
-      dfi_radar_max_intervals, &
-      ldiag3d,                 &
-      qci_conv,                &
-      do_cap_suppress,         &
-      maxupmf,                 &
-      maxMF,                   &
-      do_mynnedmf,             &
-      ichoice_in,              &
-      ichoicem_in,             &
-      ichoice_s_in,            &
-      spp_cu_deep,             &
-      spp_wts_cu_deep,         &
-      nchem,                   &
-      chem3d,                  &
-      fscav,                   &
-      wetdpc_deep,             &
-      do_smoke_transport,      &
-      kdt                      &
-      )
-  !else
-  !  print *, "INFO: Not writing state"
-  !end if
+     !--- Write input state for this time step
+     call cu_gf_io_write_state(trim(state_input_file),        &
+       ntracer=ntracer,                                       &
+       garea=garea,                                           &
+       im=im,                                                 &
+       km=km,                                                 &
+       dt=dt,                                                 &
+       flag_init=flag_init,                                   &
+       flag_restart=flag_restart,                             &
+       cactiv=cactiv,                                         &
+       cactiv_m=cactiv_m,                                     &
+       g=g,                                                   &
+       cp=cp,                                                 &
+       xlv=xlv,                                               &
+       r_v=r_v,                                               &
+       forcet=forcet,                                         &
+       forceqv_spechum=forceqv_spechum,                       &
+       phil=phil,                                             &
+       raincv=raincv,                                         &
+       qv_spechum=qv_spechum,                                 &
+       t=t,                                                   &
+       cld1d=cld1d,                                           &
+       us=us,                                                 &
+       vs=vs,                                                 &
+       t2di=t2di,                                             &
+       w=w,                                                   &
+       qv2di_spechum=qv2di_spechum,                           &
+       p2di=p2di,                                             &
+       psuri=psuri,                                           &
+       hbot=hbot,                                             &
+       htop=htop,                                             &
+       kcnv=kcnv,                                             &
+       xland=xland,                                           &
+       hfx2=hfx2,                                             &
+       qfx2=qfx2,                                             &
+       aod_gf=aod_gf,                                         &
+       cliw=cliw,                                             &
+       clcw=clcw,                                             &
+       pbl=pbl,                                               &
+       ud_mf=ud_mf,                                           &
+       dd_mf=dd_mf,                                           &
+       dt_mf=dt_mf,                                           &
+       cnvw_moist=cnvw_moist,                                 &
+       cnvc=cnvc,                                             &
+       imfshalcnv=imfshalcnv,                                 &
+       flag_for_scnv_generic_tend=flag_for_scnv_generic_tend, &
+       flag_for_dcnv_generic_tend=flag_for_dcnv_generic_tend, &
+       dtend=dtend,                                           &
+       dtidx=dtidx,                                           &
+       ntqv=ntqv,                                             &
+       ntiw=ntiw,                                             &
+       ntcw=ntcw,                                             &
+       index_of_temperature=index_of_temperature,             &
+       index_of_x_wind=index_of_x_wind,                       &
+       index_of_y_wind=index_of_y_wind,                       &
+       index_of_process_scnv=index_of_process_scnv,           &
+       index_of_process_dcnv=index_of_process_dcnv,           &
+       fhour=fhour,                                           &
+       fh_dfi_radar=fh_dfi_radar,                             &
+       ix_dfi_radar=ix_dfi_radar,                             &
+       num_dfi_radar=num_dfi_radar,                           &
+       cap_suppress=cap_suppress,                             &
+       dfi_radar_max_intervals=dfi_radar_max_intervals,       &
+       ldiag3d=ldiag3d,                                       &
+       qci_conv=qci_conv,                                     &
+       do_cap_suppress=do_cap_suppress,                       &
+       maxupmf=maxupmf,                                       &
+       maxMF=maxMF,                                           &
+       do_mynnedmf=do_mynnedmf,                               &
+       ichoice_in=ichoice_in,                                 &
+       ichoicem_in=ichoicem_in,                               &
+       ichoice_s_in=ichoice_s_in,                             &
+       spp_cu_deep=spp_cu_deep,                               &
+       spp_wts_cu_deep=spp_wts_cu_deep,                       &
+       nchem=nchem,                                           &
+       chem3d= chem3d,                                        &
+       fscav=fscav,                                           &
+       wetdpc_deep=wetdpc_deep,                               &
+       do_smoke_transport=do_smoke_transport,                 &
+       kdt=kdt                                                &
+     )
 
 
   ! initialize ccpp error handling variables
@@ -1262,6 +1258,89 @@ contains
 !$acc end parallel
           endif
         endif
+
+     !--- Write output state for this time step
+     call cu_gf_io_write_state(trim(state_output_file),        &
+        ntracer=ntracer,                                       &
+        garea=garea,                                           &
+        im=im,                                                 &
+        km=km,                                                 &
+        dt=dt,                                                 &
+        flag_init=flag_init,                                   &
+        flag_restart=flag_restart,                             &
+        cactiv=cactiv,                                         &
+        cactiv_m=cactiv_m,                                     &
+        g=g,                                                   &
+        cp=cp,                                                 &
+        xlv=xlv,                                               &
+        r_v=r_v,                                               &
+        forcet=forcet,                                         &
+        forceqv_spechum=forceqv_spechum,                       &
+        phil=phil,                                             &
+        raincv=raincv,                                         &
+        qv_spechum=qv_spechum,                                 &
+        t=t,                                                   &
+        cld1d=cld1d,                                           &
+        us=us,                                                 &
+        vs=vs,                                                 &
+        t2di=t2di,                                             &
+        w=w,                                                   &
+        qv2di_spechum=qv2di_spechum,                           &
+        p2di=p2di,                                             &
+        psuri=psuri,                                           &
+        hbot=hbot,                                             &
+        htop=htop,                                             &
+        kcnv=kcnv,                                             &
+        xland=xland,                                           &
+        hfx2=hfx2,                                             &
+        qfx2=qfx2,                                             &
+        aod_gf=aod_gf,                                         &
+        cliw=cliw,                                             &
+        clcw=clcw,                                             &
+        pbl=pbl,                                               &
+        ud_mf=ud_mf,                                           &
+        dd_mf=dd_mf,                                           &
+        dt_mf=dt_mf,                                           &
+        cnvw_moist=cnvw_moist,                                 &
+        cnvc=cnvc,                                             &
+        imfshalcnv=imfshalcnv,                                 &
+        flag_for_scnv_generic_tend=flag_for_scnv_generic_tend, &
+        flag_for_dcnv_generic_tend=flag_for_dcnv_generic_tend, &
+        dtend=dtend,                                           &
+        dtidx=dtidx,                                           &
+        ntqv=ntqv,                                             &
+        ntiw=ntiw,                                             &
+        ntcw=ntcw,                                             &
+        index_of_temperature=index_of_temperature,             &
+        index_of_x_wind=index_of_x_wind,                       &
+        index_of_y_wind=index_of_y_wind,                       &
+        index_of_process_scnv=index_of_process_scnv,           &
+        index_of_process_dcnv=index_of_process_dcnv,           &
+        fhour=fhour,                                           &
+        fh_dfi_radar=fh_dfi_radar,                             &
+        ix_dfi_radar=ix_dfi_radar,                             &
+        num_dfi_radar=num_dfi_radar,                           &
+        cap_suppress=cap_suppress,                             &
+        dfi_radar_max_intervals=dfi_radar_max_intervals,       &
+        ldiag3d=ldiag3d,                                       &
+        qci_conv=qci_conv,                                     &
+        do_cap_suppress=do_cap_suppress,                       &
+        maxupmf=maxupmf,                                       &
+        maxMF=maxMF,                                           &
+        do_mynnedmf=do_mynnedmf,                               &
+        ichoice_in=ichoice_in,                                 &
+        ichoicem_in=ichoicem_in,                               &
+        ichoice_s_in=ichoice_s_in,                             &
+        spp_cu_deep=spp_cu_deep,                               &
+        spp_wts_cu_deep=spp_wts_cu_deep,                       &
+        nchem=nchem,                                           &
+        chem3d= chem3d,                                        &
+        fscav=fscav,                                           &
+        wetdpc_deep=wetdpc_deep,                               &
+        do_smoke_transport=do_smoke_transport,                 &
+        kdt=kdt                                                &
+     )
+
    end subroutine cu_gf_driver_run
 !>@}
 end module cu_gf_driver
