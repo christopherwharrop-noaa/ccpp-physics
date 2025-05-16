@@ -253,7 +253,6 @@ contains
 !$acc declare create(cap_suppress_j)
    integer :: itime, do_cap_suppress_here
    logical :: exit_func, exist
-   integer, save :: counter = 0
    character(len=255) :: state_input_file, state_output_file
 
   !parameter (tf=243.16, tcr=270.16, tcrf=1.0/(tcr-tf)) ! FV3 original

@@ -171,7 +171,7 @@ module cu_gf_io
         'smoke dust convetive wet scavanging coefficents                                                                                     ', &
         'flag for rrfs smoke convective transport                                                                                            ', &
         'convective wet removal of smoke and dust                                                                                            ', &
-        'current forecast iteration                                                                                                           ' &
+        'current forecast iteration                                                                                                          ' &
         /)
 
    character(len=13), dimension(nargs) :: units = &
@@ -253,7 +253,7 @@ module cu_gf_io
         'none         ', &
         'flag         ', &
         'kg kg-1      ', &
-        'index         ' &
+        'index        ' &
         /)
 
 contains
@@ -452,6 +452,7 @@ contains
      integer :: dtend_dim3
      integer :: num_dfi_radar_dim
      integer :: dtidx_dim2
+     integer :: n, nColumns
  
      ! Get size of dimensions
      dtend_dim3 = size(dtend, dim=3)
@@ -463,7 +464,8 @@ contains
      call nc_check(nf90_Inquire(ncFileID, nDimensions, nVariables, nAttributes, unlimitedDimID))
 
      ! Define the dimensions
-     call nc_check(nf90_def_dim(ncid=ncFileID, name="im", len=im, dimid=imDimID))
+     nColumns = im * 8
+     call nc_check(nf90_def_dim(ncid=ncFileID, name="im", len=nColumns, dimid=imDimID))
      call nc_check(nf90_def_dim(ncid=ncFileID, name="km", len=km, dimid=kmDimID))
      call nc_check(nf90_def_dim(ncid=ncFileID, name="dtend_dim3", len=dtend_dim3, dimid=dtend_dim3DimID))
      call nc_check(nf90_def_dim(ncid=ncFileID, name="ntracers_p100", len=ntracer + 100, dimid=ntracers_p100DimID))
@@ -958,7 +960,9 @@ contains
      call nc_check(nf90_put_var(ncFileID, ntracerVarID, ntracer))
 
      ! Fill the garea variable
-     call nc_check(nf90_put_var(ncFileID, gareaVarID, garea))
+     do n = 1, nColumns
+       call nc_check(nf90_put_var(ncFileID, gareaVarID, garea, start=(/n/)))
+     end do
 
      ! Fill the dt variable
      call nc_check(nf90_put_var(ncFileID, dtVarID, dt))
@@ -979,12 +983,16 @@ contains
 
      ! Fill the cactiv variable
      if (present(cactiv)) then
-        call nc_check(nf90_put_var(ncFileID, cactivVarID, cactiv))
+        do n = 1, nColumns
+           call nc_check(nf90_put_var(ncFileID, cactivVarID, cactiv, start=(/n/)))
+        end do
      end if
 
      ! Fill the cactiv_m variable
      if (present(cactiv_m)) then
-        call nc_check(nf90_put_var(ncFileID, cactiv_mVarID, cactiv_m))
+        do n = 1, nColumns
+           call nc_check(nf90_put_var(ncFileID, cactiv_mVarID, cactiv_m, start=(/n/)))
+        end do
      end if
 
      ! Fill the g variable
@@ -1001,98 +1009,156 @@ contains
 
      ! Fill the forcet variable
      if (present(forcet)) then
-        call nc_check(nf90_put_var(ncFileID, forcetVarID, forcet))
+        do n = 1, nColumns
+           call nc_check(nf90_put_var(ncFileID, forcetVarID, forcet, start=(/n, 1/)))
+        end do
      end if
 
      ! Fill the forceqv_spechum variable
      if (present(forceqv_spechum)) then
-        call nc_check(nf90_put_var(ncFileID, forceqv_spechumVarID, forceqv_spechum))
+        do n = 1, nColumns
+           call nc_check(nf90_put_var(ncFileID, forceqv_spechumVarID, forceqv_spechum, start=(/n, 1/)))
+        end do
      end if
 
      ! Fill the phil variable
-     call nc_check(nf90_put_var(ncFileID, philVarID, phil))
+     do n = 1, nColumns
+        call nc_check(nf90_put_var(ncFileID, philVarID, phil, start=(/n, 1/)))
+     end do
 
      ! Fill the raincv variable
-     call nc_check(nf90_put_var(ncFileID, raincvVarID, raincv))
+     do n = 1, nColumns
+        call nc_check(nf90_put_var(ncFileID, raincvVarID, raincv, start=(/n/)))
+     end do
 
      ! Fill the qv_spechum variable
-     call nc_check(nf90_put_var(ncFileID, qv_spechumVarID, qv_spechum))
+     do n = 1, nColumns
+        call nc_check(nf90_put_var(ncFileID, qv_spechumVarID, qv_spechum, start=(/n, 1/)))
+     end do
 
      ! Fill the t variable
-     call nc_check(nf90_put_var(ncFileID, tVarID, t))
+     do n = 1, nColumns
+        call nc_check(nf90_put_var(ncFileID, tVarID, t, start=(/n, 1/)))
+     end do
 
      ! Fill the cld1d variable
-     call nc_check(nf90_put_var(ncFileID, cld1dVarID, cld1d))
+     do n = 1, nColumns
+        call nc_check(nf90_put_var(ncFileID, cld1dVarID, cld1d, start=(/n/)))
+     end do
 
      ! Fill the us variable
-     call nc_check(nf90_put_var(ncFileID, usVarID, us))
+     do n = 1, nColumns
+        call nc_check(nf90_put_var(ncFileID, usVarID, us, start=(/n, 1/)))
+     end do
 
      ! Fill the vs variable
-     call nc_check(nf90_put_var(ncFileID, vsVarID, vs))
+     do n = 1, nColumns
+        call nc_check(nf90_put_var(ncFileID, vsVarID, vs, start=(/n, 1/)))
+     end do
 
      ! Fill the t2di variable
-     call nc_check(nf90_put_var(ncFileID, t2diVarID, t2di))
+     do n = 1, nColumns
+        call nc_check(nf90_put_var(ncFileID, t2diVarID, t2di, start=(/n, 1/)))
+     end do
 
      ! Fill the w variable
-     call nc_check(nf90_put_var(ncFileID, wVarID, w))
+     do n = 1, nColumns
+        call nc_check(nf90_put_var(ncFileID, wVarID, w, start=(/n, 1/)))
+     end do
 
      ! Fill the qv2di_spechum variable
-     call nc_check(nf90_put_var(ncFileID, qv2di_spechumVarID, qv2di_spechum))
+     do n = 1, nColumns
+        call nc_check(nf90_put_var(ncFileID, qv2di_spechumVarID, qv2di_spechum, start=(/n, 1/)))
+     end do
 
      ! Fill the p2di variable
-     call nc_check(nf90_put_var(ncFileID, p2diVarID, p2di))
+     do n = 1, nColumns
+        call nc_check(nf90_put_var(ncFileID, p2diVarID, p2di, start=(/n, 1/)))
+     end do
 
      ! Fill the psuri variable
-     call nc_check(nf90_put_var(ncFileID, psuriVarID, psuri))
+     do n = 1, nColumns
+        call nc_check(nf90_put_var(ncFileID, psuriVarID, psuri, start=(/n/)))
+     end do
 
      ! Fill the hbot variable
-     call nc_check(nf90_put_var(ncFileID, hbotVarID, hbot))
+     do n = 1, nColumns
+        call nc_check(nf90_put_var(ncFileID, hbotVarID, hbot, start=(/n/)))
+     end do
 
      ! Fill the htop variable
-     call nc_check(nf90_put_var(ncFileID, htopVarID, htop))
+     do n = 1, nColumns
+        call nc_check(nf90_put_var(ncFileID, htopVarID, htop, start=(/n/)))
+     end do
 
      ! Fill the kcnv variable
-     call nc_check(nf90_put_var(ncFileID, kcnvVarID, kcnv))
+     do n = 1, nColumns
+        call nc_check(nf90_put_var(ncFileID, kcnvVarID, kcnv, start=(/n/)))
+     end do
 
      ! Fill the xland variable
-     call nc_check(nf90_put_var(ncFileID, xlandVarID, xland))
+     do n = 1, nColumns
+        call nc_check(nf90_put_var(ncFileID, xlandVarID, xland, start=(/n/)))
+     end do
 
      ! Fill the hfx2 variable
-     call nc_check(nf90_put_var(ncFileID, hfx2VarID, hfx2))
+     do n = 1, nColumns
+        call nc_check(nf90_put_var(ncFileID, hfx2VarID, hfx2, start=(/n/)))
+     end do
 
      ! Fill the qfx2 variable
-     call nc_check(nf90_put_var(ncFileID, qfx2VarID, qfx2))
+     do n = 1, nColumns
+        call nc_check(nf90_put_var(ncFileID, qfx2VarID, qfx2, start=(/n/)))
+     end do
 
      ! Fill the aod_gf variable
      if (present(aod_gf)) then
-        call nc_check(nf90_put_var(ncFileID, aod_gfVarID, aod_gf))
+        do n = 1, nColumns
+           call nc_check(nf90_put_var(ncFileID, aod_gfVarID, aod_gf, start=(/n/)))
+        end do
      end if
 
      ! Fill the cliw variable
-     call nc_check(nf90_put_var(ncFileID, cliwVarID, cliw))
+     do n = 1, nColumns
+        call nc_check(nf90_put_var(ncFileID, cliwVarID, cliw, start=(/n, 1/)))
+     end do
 
      ! Fill the clcw variable
-     call nc_check(nf90_put_var(ncFileID, clcwVarID, clcw))
+     do n = 1, nColumns
+        call nc_check(nf90_put_var(ncFileID, clcwVarID, clcw, start=(/n, 1/)))
+     end do
 
      ! Fill the pbl variable
-     call nc_check(nf90_put_var(ncFileID, pblVarID, pbl))
+     do n = 1, nColumns
+        call nc_check(nf90_put_var(ncFileID, pblVarID, pbl, start=(/n/)))
+     end do
 
      ! Fill the ud_mf variable
      if (present(ud_mf)) then
-        call nc_check(nf90_put_var(ncFileID, ud_mfVarID, ud_mf))
+        do n = 1, nColumns
+           call nc_check(nf90_put_var(ncFileID, ud_mfVarID, ud_mf, start=(/n, 1/)))
+        end do
      end if
 
      ! Fill the dd_mf variable
-     call nc_check(nf90_put_var(ncFileID, dd_mfVarID, dd_mf))
+     do n = 1, nColumns
+        call nc_check(nf90_put_var(ncFileID, dd_mfVarID, dd_mf, start=(/n, 1/)))
+     end do
 
      ! Fill the dt_mf variable
-     call nc_check(nf90_put_var(ncFileID, dt_mfVarID, dt_mf))
+     do n = 1, nColumns
+        call nc_check(nf90_put_var(ncFileID, dt_mfVarID, dt_mf, start=(/n, 1/)))
+     end do
 
      ! Fill the cnvw_moist variable
-     call nc_check(nf90_put_var(ncFileID, cnvw_moistVarID, cnvw_moist))
+     do n = 1, nColumns
+        call nc_check(nf90_put_var(ncFileID, cnvw_moistVarID, cnvw_moist, start=(/n, 1/)))
+     end do
 
      ! Fill the cnvc variable
-     call nc_check(nf90_put_var(ncFileID, cnvcVarID, cnvc))
+     do n = 1, nColumns
+        call nc_check(nf90_put_var(ncFileID, cnvcVarID, cnvc, start=(/n, 1/)))
+     end do
 
      ! Fill the imfshalcnv variable
      call nc_check(nf90_put_var(ncFileID, imfshalcnvVarID, imfshalcnv))
@@ -1113,7 +1179,9 @@ contains
 
      ! Fill the dtend variable
      if (present(dtend)) then
-        call nc_check(nf90_put_var(ncFileID, dtendVarID, dtend))
+        do n = 1, nColumns
+           call nc_check(nf90_put_var(ncFileID, dtendVarID, dtend, start=(/n, 1, 1/)))
+        end do
      end if
 
      ! Fill the dtidx variable
@@ -1157,7 +1225,33 @@ contains
 
      ! Fill the cap_suppress variable
      if (present(cap_suppress)) then
-       call nc_check(nf90_put_var(ncFileID, cap_suppressVarID, cap_suppress))
+        do n = 1, nColumns
+           call nc_check(nf90_put_var(ncFileID, cap_suppressVarID, cap_suppress, start=(/n, 1/)))
+        end do
+     end if
+
+     ! Fill the dfi_radar_max_intervals variable
+     call nc_check(nf90_put_var(ncFileID, dfi_radar_max_intervalsVarID, dfi_radar_max_intervals))
+
+     ! Fill the ldiag3d variable
+     if (ldiag3d) then
+        call nc_check(nf90_put_var(ncFileID, ldiag3dVarID, 1))
+     else
+        call nc_check(nf90_put_var(ncFileID, ldiag3dVarID, 0))
+     end if
+
+     ! Fill the qci_conv variable
+     if (present(qci_conv)) then
+        do n = 1, nColumns
+           call nc_check(nf90_put_var(ncFileID, qci_convVarID, qci_conv, start=(/n, 1/)))
+        end do
+     end if
+
+     ! Fill the do_cap_suppress variable
+     if (do_cap_suppress) then
+        call nc_check(nf90_put_var(ncFileID, do_cap_suppressVarID, 1))
+     else
+        call nc_check(nf90_put_var(ncFileID, do_cap_suppressVarID, 0))
      end if
 
      ! Fill the dfi_radar_max_intervals variable
@@ -1184,12 +1278,16 @@ contains
 
      ! Fill the maxupmf variable
      if (present(maxupmf)) then
-        call nc_check(nf90_put_var(ncFileID, maxupmfVarID, maxupmf))
+        do n = 1, nColumns
+           call nc_check(nf90_put_var(ncFileID, maxupmfVarID, maxupmf, start=(/n/)))
+        end do
      end if
 
      ! Fill the maxMF variable
      if (present(maxMF)) then
-        call nc_check(nf90_put_var(ncFileID, maxMFVarID, maxMF))
+        do n = 1, nColumns
+           call nc_check(nf90_put_var(ncFileID, maxMFVarID, maxMF, start=(/n/)))
+        end do
      end if
 
      ! Fill the do_mynnedmf variable
@@ -1213,12 +1311,16 @@ contains
 
      ! Fill the spp_wts_cu_deepVarID variable
      if (present(spp_wts_cu_deep)) then
-        call nc_check(nf90_put_var(ncFileID, spp_wts_cu_deepVarID, spp_wts_cu_deep))
+        do n = 1, nColumns
+           call nc_check(nf90_put_var(ncFileID, spp_wts_cu_deepVarID, spp_wts_cu_deep, start=(/n, 1/)))
+        end do
      end if
 
      ! Fill the chem3d variable
      if (present(chem3d)) then
-        call nc_check(nf90_put_var(ncFileID, chem3dVarID, chem3d))
+        do n = 1, nColumns
+           call nc_check(nf90_put_var(ncFileID, chem3dVarID, chem3d, start=(/n, 1, 1/)))
+        end do
      end if
 
      ! Fill the fscavVarID variable
@@ -1226,7 +1328,9 @@ contains
 
      ! Fill the wetdpc_deepVarID variable
      if (present(wetdpc_deep)) then
-        call nc_check(nf90_put_var(ncFileID, wetdpc_deepVarID, wetdpc_deep))
+        do n = 1, nColumns
+           call nc_check(nf90_put_var(ncFileID, wetdpc_deepVarID, wetdpc_deep, start=(/n, 1/)))
+        end do
      end if
 
      ! Fill the do_smoke_transport variable
@@ -1904,4 +2008,3 @@ contains
    end subroutine nc_check
 
 end module cu_gf_io
- 
